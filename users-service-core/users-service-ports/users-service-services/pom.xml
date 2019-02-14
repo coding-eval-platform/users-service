@@ -25,5 +25,12 @@
             <artifactId>users-service-models</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+
+        <!-- Third party libraries -->
+        <!-- Spring Data Commons to get some classes used in method signatures (e.g Page, Pageable, etc.) -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+        </dependency>
     </dependencies>
 </project>
