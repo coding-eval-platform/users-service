@@ -1,6 +1,8 @@
 package ar.edu.itba.cep.users_service.domain;
 
 import ar.edu.itba.cep.users_service.models.User;
+import ar.edu.itba.cep.users_service.models.UserCredential;
+import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import ar.edu.itba.cep.users_service.services.UserService;
 import com.bellotapps.webapps_commons.errors.UniqueViolationError;
@@ -16,6 +18,7 @@ import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 /**
  * Manager for {@link User}s.
@@ -30,13 +33,21 @@ public class UserManager implements UserService {
     private final UserRepository userRepository;
 
     /**
+     * Repository for {@link UserCredential}s.
+     */
+    private final UserCredentialRepository userCredentialRepository;
+
+    /**
      * Constructor.
      *
-     * @param userRepository Repository for {@link User}s.
+     * @param userRepository           Repository for {@link User}s.
+     * @param userCredentialRepository Repository for {@link UserCredential}s.
      */
     @Autowired
-    public UserManager(final UserRepository userRepository) {
+    public UserManager(final UserRepository userRepository,
+                       final UserCredentialRepository userCredentialRepository) {
         this.userRepository = userRepository;
+        this.userCredentialRepository = userCredentialRepository;
     }
 
 
@@ -85,7 +96,7 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public void delete(final String username) {
-        userRepository.findByUsername(username).ifPresent(userRepository::delete);
+        userRepository.findByUsername(username).ifPresent(this::deleteUser);
     }
 
 
@@ -108,7 +119,20 @@ public class UserManager implements UserService {
      */
     private void createCredential(final User user, final String password) {
         Assert.notNull(user, "The user must not be null");
-        // TODO: create credentials
+        // TODO: replace with a cryptographically secure hashing function
+        final var credential = UserCredential.buildCredential(user, password, Function.identity());
+        userCredentialRepository.save(credential);
+    }
+
+    /**
+     * Performs the operation of removing a {@link User} of the system,
+     * removing also all its {@link UserCredential}.
+     *
+     * @param user The {@link User} to be deleted.
+     */
+    private void deleteUser(final User user) {
+        userCredentialRepository.deleteByUser(user);
+        userRepository.delete(user);
     }
 
     /**

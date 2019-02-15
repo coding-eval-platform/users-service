@@ -2,7 +2,9 @@ package ar.edu.itba.cep.users_service.domain;
 
 import ar.edu.itba.cep.users_service.domain.test_config.DomainTestConfig;
 import ar.edu.itba.cep.users_service.models.User;
+import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.models.ValidationConstants;
+import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
@@ -36,6 +38,12 @@ class UserManagerTest {
     private final UserRepository userRepository;
 
     /**
+     * A mocked {@link UserCredentialRepository} that is injected to the {@link UserManager}.
+     * This reference is saved in order to configure its behaviour in each test.
+     */
+    private final UserCredentialRepository userCredentialRepository;
+
+    /**
      * The {@link UserManager} to be tested.
      */
     private final UserManager userManager;
@@ -46,9 +54,11 @@ class UserManagerTest {
      *
      * @param userRepository The {@link UserRepository} to be injected into a {@link UserManager} that will be tested.
      */
-    public UserManagerTest(@Mock final UserRepository userRepository) {
+    public UserManagerTest(@Mock final UserRepository userRepository,
+                           @Mock final UserCredentialRepository userCredentialRepository) {
         this.userRepository = userRepository;
-        this.userManager = new UserManager(userRepository);
+        this.userCredentialRepository = userCredentialRepository;
+        this.userManager = new UserManager(userRepository, userCredentialRepository);
     }
 
 
@@ -64,6 +74,7 @@ class UserManagerTest {
                 "The manager is returning an empty optional when the user exists.");
         Assertions.assertEquals(username, userManager.getByUsername(username).map(User::getUsername).get(),
                 "The returned user's username does not match the one used to search.");
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -75,6 +86,7 @@ class UserManagerTest {
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertTrue(userManager.getByUsername(username).isEmpty(),
                 "Searching for a user that does not exists is not returning an empty Optional.");
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -86,6 +98,7 @@ class UserManagerTest {
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertDoesNotThrow(() -> userManager.getByUsername(username),
                 "Searching for a user that does not exists is throwing an exception.");
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -101,6 +114,9 @@ class UserManagerTest {
         Assertions.assertDoesNotThrow(() -> userManager.register(username, password),
                 "Creating a user with a not used username fails.");
         Mockito.verify(userRepository, Mockito.atLeastOnce()).save(Mockito.any(User.class));
+        Mockito.verify(userCredentialRepository, Mockito.atLeastOnce()).save(Mockito.any(UserCredential.class));
+        Mockito.verifyNoMoreInteractions(userCredentialRepository);
+        // TODO: check if password is set?
     }
 
     /**
@@ -116,6 +132,7 @@ class UserManagerTest {
         Assertions.assertThrows(UniqueViolationException.class, () -> userManager.register(username, password),
                 "Creating a user with an already taken username does not fail.");
         Mockito.verify(userRepository, Mockito.never()).save(Mockito.any(User.class));
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -138,6 +155,7 @@ class UserManagerTest {
                         "Activating a user through the manager is not changing the user returned by it"),
                         () -> new IllegalStateException("Some test configuration is wrong."));
         Mockito.verify(userRepository, Mockito.atLeastOnce()).save(user);
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -160,6 +178,7 @@ class UserManagerTest {
                         "Activating a user through the manager is not changing the user returned by it"),
                         () -> new IllegalStateException("Some test configuration is wrong."));
         Mockito.verify(userRepository, Mockito.atLeastOnce()).save(user);
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
@@ -191,6 +210,8 @@ class UserManagerTest {
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Assertions.assertDoesNotThrow(() -> userManager.delete(username), "Deleting a user is failing.");
         Mockito.verify(userRepository, Mockito.atLeastOnce()).delete(user);
+        Mockito.verify(userCredentialRepository, Mockito.atLeastOnce()).deleteByUser(user);
+        Mockito.verifyNoMoreInteractions(userCredentialRepository);
     }
 
     /**
@@ -203,6 +224,7 @@ class UserManagerTest {
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertDoesNotThrow(() -> userManager.delete(username), "Deleting a user is failing.");
         Mockito.verify(userRepository, Mockito.never()).delete(Mockito.any(User.class));
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
 
@@ -223,10 +245,11 @@ class UserManagerTest {
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertThrows(NoSuchEntityException.class,
                 () -> userManagerAction.accept(userManager, username), message);
+        Mockito.verifyZeroInteractions(userCredentialRepository);
     }
 
     /**
-     * @return A random username whose length is between the valid limit.
+     * @return A random username whose length is between the valid limits.
      */
     private static String generateAcceptedUsername() {
         return Faker.instance()
@@ -236,9 +259,9 @@ class UserManagerTest {
     }
 
     /**
-     * @return A random username whose length is between the valid limit.
+     * @return A password that is valid.
      */
     private static String generateAcceptedPassword() {
-        return "some password"; // TODO: improve when we have credentials.
+        return "Some Password 1!";
     }
 }
