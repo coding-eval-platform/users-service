@@ -20,11 +20,14 @@ public class User {
     /**
      * The username.
      */
-    @NotNull(message = "Username is missing.", payload = ConstraintViolationError.ErrorCausePayload.MissingValue.class)
-    @Size(message = "Username too short", payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class,
-            min = ValidationConstants.USERNAME_MIN_LENGTH)
-    @Size(message = "Username too long", payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class,
-            max = ValidationConstants.USERNAME_MAX_LENGTH)
+    @NotNull(message = "Username is missing.",
+            payload = ConstraintViolationError.ErrorCausePayload.MissingValue.class)
+    @Size(min = ValidationConstants.USERNAME_MIN_LENGTH,
+            message = "Username too short",
+            payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
+    @Size(max = ValidationConstants.USERNAME_MAX_LENGTH,
+            message = "Username too long",
+            payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
     private String username;
 
     /**

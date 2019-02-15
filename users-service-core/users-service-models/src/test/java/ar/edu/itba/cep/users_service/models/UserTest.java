@@ -30,6 +30,12 @@ class UserTest {
                 "The user is not being created with an acceptable username.");
     }
 
+    @Test
+    void testNullUsername() {
+        Assertions.assertThrows(CustomConstraintViolationException.class, () -> new User(null),
+                "Creating a user with a null username must not be allowed.");
+    }
+
     /**
      * Tests that a {@link User} cannot be created if the username is too long.
      */
@@ -84,7 +90,7 @@ class UserTest {
 
 
     /**
-     * @return A random username whose length is between the valid limit.
+     * @return A random username whose length is between the valid limits.
      */
     private static String generateAcceptedUsername() {
         return generateUsernameOfLength(ValidationConstants.USERNAME_MAX_LENGTH);
