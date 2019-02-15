@@ -1,6 +1,6 @@
 package ar.edu.itba.cep.users_service.models;
 
-import ar.edu.itba.cep.users_service.models.config.ModelsConfig;
+import ar.edu.itba.cep.users_service.models.test_config.ModelsTestConfig;
 import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Assertions;
@@ -16,7 +16,7 @@ import java.util.Optional;
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
-        ModelsConfig.class
+        ModelsTestConfig.class
 })
 class UserTest {
 
@@ -26,7 +26,8 @@ class UserTest {
     @Test
     void testAcceptableUsername() {
         final var username = generateAcceptedUsername();
-        new User(username);
+        Assertions.assertDoesNotThrow(() -> new User(username),
+                "The user is not being created with an acceptable username.");
     }
 
     /**
@@ -35,7 +36,8 @@ class UserTest {
     @Test
     void testLongUsername() {
         final var longUsername = generateLongUsername();
-        Assertions.assertThrows(CustomConstraintViolationException.class, () -> new User(longUsername));
+        Assertions.assertThrows(CustomConstraintViolationException.class, () -> new User(longUsername),
+                "Creating a user with a too long username must not be allowed.");
     }
 
     /**
@@ -46,7 +48,8 @@ class UserTest {
         final var shortUsernameOptional = generateShortUsername();
         // If the username is present, then perform test. Otherwise, it means that there is no minimum length.
         shortUsernameOptional.ifPresent(shortUsername ->
-                Assertions.assertThrows(CustomConstraintViolationException.class, () -> new User(shortUsername)));
+                Assertions.assertThrows(CustomConstraintViolationException.class, () -> new User(shortUsername),
+                        "Creating a user with a too short username must not be allowed."));
     }
 
     /**
