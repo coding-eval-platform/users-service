@@ -6,7 +6,7 @@
     <logger name="ar.edu.itba.cep.users_service" level="DEBUG">
         <appender-ref ref="CONSOLE"/>
     </logger>
-    <root level="INFO">
+    <root level="WARN">
         <appender-ref ref="CONSOLE"/>
     </root>
 </configuration>
