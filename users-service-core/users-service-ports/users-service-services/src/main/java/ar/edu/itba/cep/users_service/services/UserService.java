@@ -3,6 +3,7 @@ package ar.edu.itba.cep.users_service.services;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
+import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +47,18 @@ public interface UserService {
      */
     User register(final String username, final String password)
             throws UniqueViolationException, CustomConstraintViolationException;
+
+    /**
+     * Changes the password to the {@link User} with the given {@code username}.
+     *
+     * @param username        The {@link User}'s username.
+     * @param currentPassword The {@link User}'s current password.
+     * @param newPassword     The new password.
+     * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
+     * @throws UnauthorizedException If the {@code currentPassword} does not match with the actual password
+     */
+    void changePassword(final String username, final String currentPassword, final String newPassword)
+            throws NoSuchEntityException, UnauthorizedException;
 
     /**
      * Activates the {@link User} with the given {@code username}.

@@ -8,17 +8,18 @@ import ar.edu.itba.cep.users_service.services.UserService;
 import com.bellotapps.webapps_commons.errors.UniqueViolationError;
 import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
+import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 
 /**
  * Manager for {@link User}s.
@@ -38,16 +39,24 @@ public class UserManager implements UserService {
     private final UserCredentialRepository userCredentialRepository;
 
     /**
+     * {@link PasswordEncoder} used for hashing passwords.
+     */
+    private final PasswordEncoder passwordEncoder;
+
+    /**
      * Constructor.
      *
      * @param userRepository           Repository for {@link User}s.
      * @param userCredentialRepository Repository for {@link UserCredential}s.
+     * @param passwordEncoder          {@link PasswordEncoder} used for hashing passwords.
      */
     @Autowired
     public UserManager(final UserRepository userRepository,
-                       final UserCredentialRepository userCredentialRepository) {
+                       final UserCredentialRepository userCredentialRepository,
+                       final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -75,6 +84,21 @@ public class UserManager implements UserService {
         createCredential(user, password); // Then, create the initial credential for it
 
         return user;
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(final String username, final String currentPassword, final String newPassword)
+            throws NoSuchEntityException, UnauthorizedException {
+        final var user = loadUser(username);
+        final var actualCredential = userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user)
+                .orElseThrow(() -> new RuntimeException("Invalid system state. This should not happen."));
+        // Check that the currentPassword matches the actual password
+        Optional.ofNullable(currentPassword)
+                .filter(password -> passwordEncoder.matches(password, actualCredential.getHashedPassword()))
+                .orElseThrow(() -> new UnauthorizedException("Passwords don't match"));
+        // If reached here, passwords match. Change of password can be performed.
+        createCredential(user, newPassword);
     }
 
     @Override
@@ -119,8 +143,7 @@ public class UserManager implements UserService {
      */
     private void createCredential(final User user, final String password) {
         Assert.notNull(user, "The user must not be null");
-        // TODO: replace with a cryptographically secure hashing function
-        final var credential = UserCredential.buildCredential(user, password, Function.identity());
+        final var credential = UserCredential.buildCredential(user, password, passwordEncoder::encode);
         userCredentialRepository.save(credential);
     }
 

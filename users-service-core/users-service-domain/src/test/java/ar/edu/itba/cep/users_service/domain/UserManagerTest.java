@@ -7,6 +7,7 @@ import ar.edu.itba.cep.users_service.models.ValidationConstants;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
+import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Assertions;
@@ -15,11 +16,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 /**
  * Test class for the user manager.
@@ -43,6 +46,8 @@ class UserManagerTest {
      */
     private final UserCredentialRepository userCredentialRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     /**
      * The {@link UserManager} to be tested.
      */
@@ -55,10 +60,12 @@ class UserManagerTest {
      * @param userRepository The {@link UserRepository} to be injected into a {@link UserManager} that will be tested.
      */
     public UserManagerTest(@Mock final UserRepository userRepository,
-                           @Mock final UserCredentialRepository userCredentialRepository) {
+                           @Mock final UserCredentialRepository userCredentialRepository,
+                           @Mock final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
-        this.userManager = new UserManager(userRepository, userCredentialRepository);
+        this.passwordEncoder = passwordEncoder;
+        this.userManager = new UserManager(userRepository, userCredentialRepository, passwordEncoder);
     }
 
 
@@ -115,8 +122,11 @@ class UserManagerTest {
                 "Creating a user with a not used username fails.");
         Mockito.verify(userRepository, Mockito.atLeastOnce()).save(Mockito.any(User.class));
         Mockito.verify(userCredentialRepository, Mockito.atLeastOnce()).save(Mockito.any(UserCredential.class));
+        Mockito.verify(passwordEncoder, Mockito.atLeastOnce()).encode(password);
         Mockito.verifyNoMoreInteractions(userCredentialRepository);
-        // TODO: check if password is set?
+        Mockito.verifyNoMoreInteractions(passwordEncoder);
+        // TODO: test whether the save operation over the userCredentialRepository
+        //  is performed with a UserCredential owned by the created user (instead of any User)?
     }
 
     /**
@@ -133,6 +143,97 @@ class UserManagerTest {
                 "Creating a user with an already taken username does not fail.");
         Mockito.verify(userRepository, Mockito.never()).save(Mockito.any(User.class));
         Mockito.verifyZeroInteractions(userCredentialRepository);
+    }
+
+
+    /**
+     * Tests that password is changed by verifying interactions
+     * with the {@code userCredentialRepository} and {@code passwordEncoder}.
+     *
+     * @param user       A mocked {@link User} (the one owning the given {@link UserCredential}).
+     * @param credential a mocked {@link UserCredential} (the actual credential for the given {@link User},
+     *                   which will be replaced with a new one).
+     */
+    @Test
+    void testChangeOfPasswordSavesANewCredential(@Mock final User user,
+                                                 @Mock final UserCredential credential) {
+        final Function<CharSequence, String> hashing = CharSequence::toString;
+        preparePasswordEncoder(hashing);
+        final var username = generateAcceptedUsername();
+        final var currentPassword = generateAcceptedPassword();
+        Mockito.when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
+        Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        Mockito
+                .when(userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user))
+                .thenReturn(Optional.of(credential));
+
+        final var newPassword = generateAcceptedPassword() + "another";
+        Assertions.assertDoesNotThrow(() -> userManager.changePassword(username, currentPassword, newPassword),
+                "Changing the password is failing.");
+        Mockito
+                .verify(userCredentialRepository, Mockito.atLeastOnce())
+                .findTopByUserOrderByCreatedAtDesc(user);
+        Mockito
+                .verify(userCredentialRepository, Mockito.never())
+                .save(credential); // This checks that the actual credential is not saved again.
+        Mockito
+                .verify(userCredentialRepository, Mockito.never())
+                .delete(credential); // This checks that the actual credential is not removed when creating a new one.
+        Mockito
+                .verify(userCredentialRepository, Mockito.atLeastOnce())
+                .save(Mockito.any(UserCredential.class));
+        Mockito
+                .verify(passwordEncoder, Mockito.atLeastOnce())
+                .encode(newPassword);
+        Mockito
+                .verify(passwordEncoder, Mockito.atLeastOnce())
+                .matches(currentPassword, hashing.apply(credential.getHashedPassword()));
+        Mockito.verifyNoMoreInteractions(userCredentialRepository);
+        Mockito.verifyNoMoreInteractions(passwordEncoder);
+    }
+
+    @Test
+    void testChangeOfPasswordWithWrongPassword(@Mock final User user,
+                                               @Mock final UserCredential credential) {
+        final Function<CharSequence, String> hashing = CharSequence::toString;
+        preparePasswordEncoder(hashing);
+        final var username = generateAcceptedUsername();
+        final var currentPassword = generateAcceptedPassword();
+
+        Mockito.when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
+        Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        Mockito
+                .when(userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user))
+                .thenReturn(Optional.of(credential));
+
+        final var newPassword = generateAcceptedPassword() + "another";
+        final var wrongPassword = currentPassword + "Wrong!";
+        Assertions.assertThrows(UnauthorizedException.class,
+                () -> userManager.changePassword(username, wrongPassword, newPassword),
+                "Changing the password with a wrong password is not throwing UnauthorizedException.");
+        Mockito
+                .verify(userCredentialRepository, Mockito.atLeastOnce())
+                .findTopByUserOrderByCreatedAtDesc(user);
+        Mockito
+                .verify(userCredentialRepository, Mockito.never())
+                .save(Mockito.any(UserCredential.class));
+        Mockito
+                .verify(passwordEncoder, Mockito.never())
+                .encode(newPassword);
+        Mockito
+                .verify(passwordEncoder, Mockito.atLeastOnce())
+                .matches(wrongPassword, hashing.apply(credential.getHashedPassword()));
+        Mockito.verifyNoMoreInteractions(userCredentialRepository);
+        Mockito.verifyNoMoreInteractions(passwordEncoder);
+    }
+
+    @Test
+    void testChangingPasswordToNonExistenceUserThrowsNoSuchEntityException() {
+        final var currentPassword = generateAcceptedPassword();
+        final var newPassword = currentPassword + "another";
+        testNonExistenceActionThrowsNoSuchEntityException(
+                (userManager, username) -> userManager.changePassword(username, currentPassword, newPassword),
+                "Trying to change password to a user that does not exist is not throwing NoSuchEntityException.");
     }
 
     /**
@@ -246,6 +347,21 @@ class UserManagerTest {
         Assertions.assertThrows(NoSuchEntityException.class,
                 () -> userManagerAction.accept(userManager, username), message);
         Mockito.verifyZeroInteractions(userCredentialRepository);
+    }
+
+    /**
+     * Prepares the {@code passwordEncoder} mock with the given {@code encoderFunction}.
+     *
+     * @param encoderFunction The encoding {@link Function}.
+     */
+    private void preparePasswordEncoder(Function<CharSequence, String> encoderFunction) {
+        Mockito
+                .when(passwordEncoder.encode(Mockito.anyString()))
+                .then(invocation -> encoderFunction.apply(invocation.getArgument(0)));
+        Mockito
+                .when(passwordEncoder.matches(Mockito.anyString(), Mockito.anyString()))
+                .then(invocation ->
+                        encoderFunction.apply(invocation.getArgument(0)).equals(invocation.getArgument(1)));
     }
 
     /**
