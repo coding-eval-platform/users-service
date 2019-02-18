@@ -20,6 +20,18 @@ spring:
                         non_contextual_creation: true
         open-in-view: false
 
+server:
+    port: 8000
+    error:
+        include-stacktrace: never
+        whitelabel:
+            enabled: false
+        include-exception: false
+    servlet:
+        context-path: /
+    compression:
+        enabled: true
+
 ---
 # Configuration for Development Environment
 

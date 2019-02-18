@@ -151,7 +151,7 @@ public class UserCredential {
                 message = "Password must contain a lowercase letter",
                 payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
         @Pattern(regexp = ".*[A-Z].*",
-                message = "Password must contain am uppercase letter",
+                message = "Password must contain an uppercase letter",
                 payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
         @Pattern(regexp = ".*\\d.*",
                 message = "Password must contain a number",
