@@ -5,6 +5,7 @@ import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationExcept
 import com.bellotapps.webapps_commons.validation.annotations.ValidateConstraintsBefore;
 import org.springframework.util.Assert;
 
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
@@ -14,27 +15,48 @@ import java.util.function.Function;
 /**
  * Represents a credential for {@link User}s of this application.
  */
+@Entity
+@Table(name = "user_credentials")
 public class UserCredential {
 
     /**
      * The credential id.
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
      * The {@link User} owning this credential.
      */
+    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private final User user;
 
     /**
      * The hashed password.
      */
+    @Column(name = "hashed_password", nullable = false, updatable = false)
     private final String hashedPassword;
 
     /**
      * {@link Instant} at which this credential is created.
      */
+    @Column(name = "created_at", nullable = false, updatable = false)
     private final Instant createdAt;
+
+
+    /**
+     * Default constructor for Hibernate
+     */
+    /* package */ UserCredential() {
+        // Initialize final fields with default values. They will be overridden by Hibernate on initialization.
+        this.id = 0;
+        this.user = null;
+        this.hashedPassword = null;
+        this.createdAt = null;
+    }
 
     /**
      * Private constructor.

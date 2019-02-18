@@ -22,7 +22,7 @@
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>users-service-services</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <!-- Third party libraries-->

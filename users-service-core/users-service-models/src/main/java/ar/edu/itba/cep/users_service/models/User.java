@@ -4,17 +4,23 @@ import com.bellotapps.webapps_commons.errors.ConstraintViolationError;
 import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.bellotapps.webapps_commons.validation.annotations.ValidateConstraintsAfter;
 
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 /**
  * Represents a user of this application.
  */
+@Entity
+@Table(name = "users")
 public class User {
 
     /**
      * The user's id.
      */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY) // TODO: use a random generator?
+    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
@@ -28,12 +34,23 @@ public class User {
     @Size(max = ValidationConstants.USERNAME_MAX_LENGTH,
             message = "Username too long",
             payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-    private String username;
+    @Column(name = "username", nullable = false, updatable = false)
+    private final String username;
 
     /**
      * A flag indicating whether this user is active (i.e can operate on the application).
      */
+    @Column(name = "active", nullable = false)
     private boolean active;
+
+    /**
+     * Default constructor for Hibernate.
+     */
+    /* package */ User() {
+        // Initialize final fields with default values. They will be overridden by Hibernate on initialization.
+        this.id = 0;
+        this.username = null;
+    }
 
     /**
      * Constructor.

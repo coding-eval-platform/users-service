@@ -23,19 +23,19 @@
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>users-service-models</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
         <!-- Ports -->
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>users-service-repositories</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
             <artifactId>users-service-services</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
         </dependency>
 
 
