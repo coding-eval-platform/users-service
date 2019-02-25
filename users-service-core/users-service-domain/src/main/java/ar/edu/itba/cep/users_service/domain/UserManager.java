@@ -10,9 +10,9 @@ import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationExcept
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
+import com.bellotapps.webapps_commons.persistence.repository_utils.Page;
+import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,9 +61,8 @@ public class UserManager implements UserService {
 
 
     @Override
-    public Page<User> findMatching(final String username, final Boolean active, final Pageable pageable) {
-        throw new UnsupportedOperationException("Not implemented yet");
-
+    public Page<User> findMatching(final String username, final Boolean active, final PagingRequest pagingRequest) {
+        return userRepository.findFiltering(username, active, pagingRequest);
     }
 
     @Override
@@ -91,7 +90,7 @@ public class UserManager implements UserService {
     public void changePassword(final String username, final String currentPassword, final String newPassword)
             throws NoSuchEntityException, UnauthorizedException {
         final var user = loadUser(username);
-        final var actualCredential = userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user)
+        final var actualCredential = userCredentialRepository.findLastForUser(user)
                 .orElseThrow(() -> new RuntimeException("Invalid system state. This should not happen."));
         // Check that the currentPassword matches the actual password
         Optional.ofNullable(currentPassword)

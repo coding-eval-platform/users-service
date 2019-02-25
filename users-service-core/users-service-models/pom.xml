@@ -26,7 +26,7 @@
 
         <!-- Third party libraries -->
 
-        <!-- Spring Boot starter that allows to basic Spring features (e.g Configuration, Components, Beans, etc). -->
+        <!-- Spring Boot starter for basic Spring features (e.g Configuration, Components, Beans, etc). -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
@@ -55,20 +55,6 @@
         <dependency>
             <groupId>com.bellotapps.webapps</groupId>
             <artifactId>webapps-commons-validation-aspects</artifactId>
-        </dependency>
-
-        <!-- Hibernate Validation -->
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.hibernate.validator</groupId>
-            <artifactId>hibernate-validator-annotation-processor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.glassfish</groupId>
-            <artifactId>javax.el</artifactId>
         </dependency>
 
         <!-- Testing -->
@@ -100,6 +86,7 @@
         <dependency>
             <groupId>com.github.javafaker</groupId>
             <artifactId>javafaker</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -5,8 +5,8 @@ import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationExcept
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.bellotapps.webapps_commons.persistence.repository_utils.Page;
+import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
 
 import java.util.Optional;
 
@@ -19,13 +19,13 @@ public interface UserService {
      * Finds {@link User}s, applying optional filters and pagination.
      * String filters are compared as with the "like" keyword, matching anywhere.
      *
-     * @param username A filter for the {@link User}'s username.
-     * @param active   The {@link User}'s active flag state.
-     * @param pageable A {@link Pageable} with the paging information.
+     * @param username      A filter for the {@link User}'s username.
+     * @param active        The {@link User}'s active flag state.
+     * @param pagingRequest A {@link PagingRequest} with the paging information.
      * @return The resulting {@link Page}.
      * @apiNote Those parameter that are {@code null} will not be taken into account (they are optional).
      */
-    Page<User> findMatching(final String username, final Boolean active, final Pageable pageable);
+    Page<User> findMatching(final String username, final Boolean active, final PagingRequest pagingRequest);
 
     /**
      * Retrieves the {@link User} with the given {@code username}.
@@ -85,5 +85,4 @@ public interface UserService {
      * @apiNote This is an idempotent operation.
      */
     void delete(final String username);
-
 }
