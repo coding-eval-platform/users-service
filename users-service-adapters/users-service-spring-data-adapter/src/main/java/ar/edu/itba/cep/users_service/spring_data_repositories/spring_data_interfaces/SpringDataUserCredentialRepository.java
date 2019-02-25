@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 /**
- * A port out of the application that allows {@link UserCredential} persistence.
+ * A {@link CrudRepository} for {@link UserCredential}s.
  */
 @Repository
 public interface SpringDataUserCredentialRepository extends CrudRepository<UserCredential, Long> {
