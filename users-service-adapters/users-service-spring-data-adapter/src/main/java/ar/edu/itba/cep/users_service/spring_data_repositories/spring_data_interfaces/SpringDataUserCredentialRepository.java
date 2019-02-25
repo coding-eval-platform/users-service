@@ -1,23 +1,25 @@
-package ar.edu.itba.cep.users_service.repositories;
+package ar.edu.itba.cep.users_service.spring_data_repositories.spring_data_interfaces;
 
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 /**
  * A port out of the application that allows {@link UserCredential} persistence.
  */
-public interface UserCredentialRepository extends BasicRepository<UserCredential, Long> {
+@Repository
+public interface SpringDataUserCredentialRepository extends CrudRepository<UserCredential, Long> {
 
     /**
      * Retrieves the last {@link UserCredential} created for the given {@code user}.
      *
      * @param user The {@link User} owning the {@link UserCredential}.
-     * @return An {@link Optional} containing
-     * the lastly created {@link UserCredential} created for the given {@code user}, if it exists, or empty otherwise.
+     * @return The lastly created {@link UserCredential} created for the given {@code user}.
      */
-    Optional<UserCredential> findLastForUser(final User user);
+    Optional<UserCredential> findTopByUserOrderByCreatedAtDesc(final User user);
 
     /**
      * Removes all {@link UserCredential} of a given {@link User}.

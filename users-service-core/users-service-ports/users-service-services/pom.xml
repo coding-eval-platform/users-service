@@ -26,11 +26,12 @@
             <version>${project.parent.version}</version>
         </dependency>
 
+
         <!-- Third party libraries -->
-        <!-- Spring Data Commons to get some classes used in method signatures (e.g Page, Pageable, etc.) -->
+        <!-- Repository Utils to have access to Paging and Sorting stuff -->
         <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-commons</artifactId>
+            <groupId>com.bellotapps.webapps</groupId>
+            <artifactId>webapps-commons-repository-utils</artifactId>
         </dependency>
     </dependencies>
 </project>

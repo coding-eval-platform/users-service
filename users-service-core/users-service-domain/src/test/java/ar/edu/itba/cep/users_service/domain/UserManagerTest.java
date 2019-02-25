@@ -164,7 +164,7 @@ class UserManagerTest {
         Mockito.when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Mockito
-                .when(userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user))
+                .when(userCredentialRepository.findLastForUser(user))
                 .thenReturn(Optional.of(credential));
 
         final var newPassword = generateAcceptedPassword() + "another";
@@ -172,7 +172,7 @@ class UserManagerTest {
                 "Changing the password is failing.");
         Mockito
                 .verify(userCredentialRepository, Mockito.atLeastOnce())
-                .findTopByUserOrderByCreatedAtDesc(user);
+                .findLastForUser(user);
         Mockito
                 .verify(userCredentialRepository, Mockito.never())
                 .save(credential); // This checks that the actual credential is not saved again.
@@ -203,7 +203,7 @@ class UserManagerTest {
         Mockito.when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
         Mockito.when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Mockito
-                .when(userCredentialRepository.findTopByUserOrderByCreatedAtDesc(user))
+                .when(userCredentialRepository.findLastForUser(user))
                 .thenReturn(Optional.of(credential));
 
         final var newPassword = generateAcceptedPassword() + "another";
@@ -213,7 +213,7 @@ class UserManagerTest {
                 "Changing the password with a wrong password is not throwing UnauthorizedException.");
         Mockito
                 .verify(userCredentialRepository, Mockito.atLeastOnce())
-                .findTopByUserOrderByCreatedAtDesc(user);
+                .findLastForUser(user);
         Mockito
                 .verify(userCredentialRepository, Mockito.never())
                 .save(Mockito.any(UserCredential.class));

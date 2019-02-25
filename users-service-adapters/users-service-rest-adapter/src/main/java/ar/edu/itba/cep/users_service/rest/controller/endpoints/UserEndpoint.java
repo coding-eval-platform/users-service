@@ -11,10 +11,10 @@ import com.bellotapps.webapps_commons.data_transfer.jersey.annotations.Java8Time
 import com.bellotapps.webapps_commons.data_transfer.jersey.annotations.PaginationParam;
 import com.bellotapps.webapps_commons.exceptions.IllegalParamValueException;
 import com.bellotapps.webapps_commons.exceptions.MissingJsonException;
+import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Pageable;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -63,11 +63,11 @@ public class UserEndpoint {
                                  @SuppressWarnings("RestParamTypeInspection")
                                  @Java8Time(formatter = DateTimeFormatters.ISO_LOCAL_DATE)
                                  @QueryParam("date") final LocalDate date,
-                                 @PaginationParam final Pageable pageable) {
+                                 @PaginationParam final PagingRequest pagingRequest) {
         LOGGER.debug("Getting users matching");
-        final var users = userService.findMatching(username, active, pageable)
+        final var users = userService.findMatching(username, active, pagingRequest)
                 .map(UserDto::new)
-                .getContent();
+                .content();
         return Response.ok(users).build();
     }
 

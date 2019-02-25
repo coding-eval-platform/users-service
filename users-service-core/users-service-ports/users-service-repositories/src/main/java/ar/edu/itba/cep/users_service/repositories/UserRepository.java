@@ -1,15 +1,15 @@
 package ar.edu.itba.cep.users_service.repositories;
 
 import ar.edu.itba.cep.users_service.models.User;
-import com.bellotapps.webapps_commons.repositories.ExtendedJpaRepository;
+import com.bellotapps.webapps_commons.persistence.repository_utils.Page;
+import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
 
 import java.util.Optional;
 
 /**
  * A port out of the application that allows {@link User} persistence.
  */
-// TODO: remove comment when JPA is added into the project.
-public interface UserRepository extends ExtendedJpaRepository<User, Long> {
+public interface UserRepository extends WriterRepository<User, Long> {
 
     /**
      * Retrieves the {@link User} with the given {@code username}.
@@ -27,4 +27,14 @@ public interface UserRepository extends ExtendedJpaRepository<User, Long> {
      * @return {@code true} if a {@link User} exists with the given {@code username}, or {@code false} otherwise.
      */
     boolean existsByUsername(final String username);
+
+    /**
+     * Searches for {@link User}s applying "like" username and active flag filters, returning data in a {@link Page}.
+     *
+     * @param username      A username pattern.
+     * @param active        The active flag.
+     * @param pagingRequest {@link PagingRequest} indicating information about page number, size and sorting data.
+     * @return The {@link Page} containing {@link User}s matching.
+     */
+    Page<User> findFiltering(final String username, final Boolean active, final PagingRequest pagingRequest);
 }

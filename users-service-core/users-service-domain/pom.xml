@@ -53,6 +53,12 @@
             <artifactId>spring-security-core</artifactId>
         </dependency>
 
+        <!-- Spring tx for transactions -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+
         <!-- Testing -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
