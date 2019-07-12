@@ -1,8 +1,8 @@
-package ar.edu.itba.cep.users_service.spring_data_repositories;
+package ar.edu.itba.cep.users_service.spring_data;
 
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
-import ar.edu.itba.cep.users_service.spring_data_repositories.spring_data_interfaces.SpringDataUserRepository;
+import ar.edu.itba.cep.users_service.spring_data.interfaces.SpringDataUserRepository;
 import com.bellotapps.webapps_commons.persistence.jpa.PredicateBuilders;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
