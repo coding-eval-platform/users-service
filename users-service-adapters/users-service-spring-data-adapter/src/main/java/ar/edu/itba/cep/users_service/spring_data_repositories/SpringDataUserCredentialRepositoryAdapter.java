@@ -3,8 +3,8 @@ package ar.edu.itba.cep.users_service.spring_data_repositories;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
-import ar.edu.itba.cep.users_service.spring_data_repositories.helpers.BasicRepositoryAdapter;
 import ar.edu.itba.cep.users_service.spring_data_repositories.spring_data_interfaces.SpringDataUserCredentialRepository;
+import com.bellotapps.webapps_commons.persistence.spring_data.repository_utils_adapters.repositories.BasicRepositoryAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -40,7 +40,7 @@ public class SpringDataUserCredentialRepositoryAdapter
     // ================================================================================================================
 
     @Override
-    public SpringDataUserCredentialRepository getRepository() {
+    public SpringDataUserCredentialRepository getCrudRepository() {
         return repository;
     }
 

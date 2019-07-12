@@ -2,6 +2,7 @@ package ar.edu.itba.cep.users_service.repositories;
 
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
+import com.bellotapps.webapps_commons.persistence.repository_utils.repositories.BasicRepository;
 
 import java.util.Optional;
 

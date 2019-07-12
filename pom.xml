@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.bellotapps.webapps</groupId>
         <artifactId>webapps-commons-parent-project</artifactId>
-        <version>0.2.0-RELEASE</version>
+        <version>0.3.0-RELEASE</version>
     </parent>
 
     <groupId>ar.edu.itba.cep</groupId>

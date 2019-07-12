@@ -2,13 +2,13 @@ package ar.edu.itba.cep.users_service.spring_data_repositories;
 
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
-import ar.edu.itba.cep.users_service.spring_data_repositories.helpers.WriterRepositoryAdapter;
 import ar.edu.itba.cep.users_service.spring_data_repositories.spring_data_interfaces.SpringDataUserRepository;
 import com.bellotapps.webapps_commons.persistence.jpa.PredicateBuilders;
-import com.bellotapps.webapps_commons.persistence.repository_utils.Page;
-import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
+import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
+import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
 import com.bellotapps.webapps_commons.persistence.spring_data.PageableValidator;
-import com.bellotapps.webapps_commons.persistence.spring_data.PagingMapper;
+import com.bellotapps.webapps_commons.persistence.spring_data.repository_utils_adapters.paging_and_sorting.PagingMapper;
+import com.bellotapps.webapps_commons.persistence.spring_data.repository_utils_adapters.repositories.WriterRepositoryAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
@@ -47,7 +47,7 @@ public class SpringDataUserRepositoryAdapter implements UserRepository, WriterRe
     // ================================================================================================================
 
     @Override
-    public SpringDataUserRepository getRepository() {
+    public SpringDataUserRepository getCrudRepository() {
         return repository;
     }
 

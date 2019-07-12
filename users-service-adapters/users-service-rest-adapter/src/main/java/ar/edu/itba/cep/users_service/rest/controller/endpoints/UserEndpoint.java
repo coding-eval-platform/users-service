@@ -11,7 +11,7 @@ import com.bellotapps.webapps_commons.data_transfer.jersey.annotations.Java8Time
 import com.bellotapps.webapps_commons.data_transfer.jersey.annotations.PaginationParam;
 import com.bellotapps.webapps_commons.exceptions.IllegalParamValueException;
 import com.bellotapps.webapps_commons.exceptions.MissingJsonException;
-import com.bellotapps.webapps_commons.persistence.repository_utils.PagingRequest;
+import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
