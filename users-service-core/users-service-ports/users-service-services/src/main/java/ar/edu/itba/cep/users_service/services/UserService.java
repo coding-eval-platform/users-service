@@ -1,7 +1,6 @@
 package ar.edu.itba.cep.users_service.services;
 
 import ar.edu.itba.cep.users_service.models.User;
-import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
@@ -42,11 +41,11 @@ public interface UserService {
      * @param username The username for the {@link User}.
      * @param password The password for the {@link User}.
      * @return The created {@link User}.
-     * @throws UniqueViolationException           If the given {@code username} is already in use.
-     * @throws CustomConstraintViolationException If the username or passwords are not valid.
+     * @throws UniqueViolationException If the given {@code username} is already in use.
+     * @throws IllegalArgumentException If the username or passwords are not valid.
      */
     User register(final String username, final String password)
-            throws UniqueViolationException, CustomConstraintViolationException;
+            throws UniqueViolationException, IllegalArgumentException;
 
     /**
      * Changes the password to the {@link User} with the given {@code username}.
@@ -58,7 +57,7 @@ public interface UserService {
      * @throws UnauthorizedException If the {@code currentPassword} does not match with the actual password
      */
     void changePassword(final String username, final String currentPassword, final String newPassword)
-            throws NoSuchEntityException, UnauthorizedException;
+            throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException;
 
     /**
      * Activates the {@link User} with the given {@code username}.

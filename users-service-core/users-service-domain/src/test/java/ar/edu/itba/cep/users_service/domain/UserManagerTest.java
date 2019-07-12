@@ -1,6 +1,5 @@
 package ar.edu.itba.cep.users_service.domain;
 
-import ar.edu.itba.cep.users_service.domain.test_config.DomainTestConfig;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.models.ValidationConstants;
@@ -17,8 +16,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -28,10 +25,6 @@ import java.util.function.Function;
  * Test class for the user manager.
  */
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {
-        DomainTestConfig.class
-})
 class UserManagerTest {
 
     /**

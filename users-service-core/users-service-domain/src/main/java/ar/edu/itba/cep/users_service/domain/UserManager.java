@@ -6,7 +6,6 @@ import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import ar.edu.itba.cep.users_service.services.UserService;
 import com.bellotapps.webapps_commons.errors.UniqueViolationError;
-import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
@@ -73,7 +72,7 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public User register(final String username, final String password)
-            throws UniqueViolationException, CustomConstraintViolationException {
+            throws UniqueViolationException, IllegalArgumentException {
         // First check if the username is already in use.
         if (userRepository.existsByUsername(username)) {
             throw new UniqueViolationException(List.of(USERNAME_IN_USE));
@@ -88,7 +87,7 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public void changePassword(final String username, final String currentPassword, final String newPassword)
-            throws NoSuchEntityException, UnauthorizedException {
+            throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException {
         final var user = loadUser(username);
         final var actualCredential = userCredentialRepository.findLastForUser(user)
                 .orElseThrow(() -> new RuntimeException("Invalid system state. This should not happen."));

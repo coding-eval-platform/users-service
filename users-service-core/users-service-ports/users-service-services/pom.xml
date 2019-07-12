@@ -33,5 +33,10 @@
             <groupId>com.bellotapps.webapps</groupId>
             <artifactId>webapps-commons-repository-utils</artifactId>
         </dependency>
+        <!-- Exception definitions -->
+        <dependency>
+            <groupId>com.bellotapps.webapps</groupId>
+            <artifactId>webapps-commons-exceptions</artifactId>
+        </dependency>
     </dependencies>
 </project>
