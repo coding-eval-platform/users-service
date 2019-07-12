@@ -22,6 +22,7 @@
 
         <!-- Versions -->
         <com.github.javafaker.javafaker.version>0.17.2</com.github.javafaker.javafaker.version>
+        <com.spotify.dockerfile-maven.version>1.4.10</com.spotify.dockerfile-maven.version>
     </properties>
 
     <modules>
@@ -57,9 +58,28 @@
         </profile>
 
         <profile>
-            <id>travis-ci</id>
+            <id>ci-cd</id>
+        </profile>
+
+        <profile>
+            <id>docker-build</id>
         </profile>
     </profiles>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>com.spotify</groupId>
+                    <artifactId>dockerfile-maven-plugin</artifactId>
+                    <version>${com.spotify.dockerfile-maven.version}</version>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
     <licenses>
         <license>
