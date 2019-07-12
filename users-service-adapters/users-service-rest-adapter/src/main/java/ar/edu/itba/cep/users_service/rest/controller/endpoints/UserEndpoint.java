@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.validation.Valid;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
@@ -88,7 +89,7 @@ public class UserEndpoint {
 
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response register(@Context final UriInfo uriInfo, final UserCreationRequestDto requestDto) {
+    public Response register(@Context final UriInfo uriInfo, @Valid final UserCreationRequestDto requestDto) {
         if (requestDto == null) {
             throw new MissingJsonException();
         }
@@ -101,8 +102,9 @@ public class UserEndpoint {
     @PUT
     @Path("{username : .+}/password")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response changePassword(@PathParam("username") final String username,
-                                   final PasswordChangeRequestDto changeDto) {
+    public Response changePassword(
+            @PathParam("username") final String username,
+            @Valid final PasswordChangeRequestDto changeDto) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
