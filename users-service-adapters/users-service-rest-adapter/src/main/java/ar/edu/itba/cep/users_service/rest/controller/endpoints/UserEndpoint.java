@@ -26,17 +26,12 @@ import java.time.LocalDate;
 import java.util.Collections;
 
 /**
- * API endpoint for {@link User} management.
+ * Rest Adapter of {@link UserService}, encapsulating {@link User} management.
  */
-@Path(UserEndpoint.USERS_ENDPOINT)
+@Path("")
 @Produces(MediaType.APPLICATION_JSON)
 @JerseyController
 public class UserEndpoint {
-
-    /**
-     * Path prefix for {@link User} management.
-     */
-    public static final String USERS_ENDPOINT = "/users";
 
     /**
      * The {@link UserService} that will be used to manage {@link User}s.
@@ -58,7 +53,9 @@ public class UserEndpoint {
         this.userService = userService;
     }
 
+
     @GET
+    @Path(Routes.USERS)
     public Response findMatching(@QueryParam("username") final String username,
                                  @QueryParam("active") final Boolean active,
                                  @SuppressWarnings("RestParamTypeInspection")
@@ -73,8 +70,9 @@ public class UserEndpoint {
     }
 
     @GET
-    @Path("{username : .+}")
-    public Response getUserByUsername(@PathParam("username") final String username) {
+    @Path(Routes.USER_BY_USERNAME)
+    public Response getUserByUsername(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
@@ -88,6 +86,7 @@ public class UserEndpoint {
     }
 
     @POST
+    @Path(Routes.USERS)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response register(@Context final UriInfo uriInfo, @Valid final UserCreationRequestDto requestDto) {
         if (requestDto == null) {
@@ -100,10 +99,10 @@ public class UserEndpoint {
     }
 
     @PUT
-    @Path("{username : .+}/password")
+    @Path(Routes.USER_CHANGE_OF_PASSWORD)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response changePassword(
-            @PathParam("username") final String username,
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
             @Valid final PasswordChangeRequestDto changeDto) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
@@ -117,8 +116,9 @@ public class UserEndpoint {
     }
 
     @PUT
-    @Path("{username : .+}/active")
-    public Response activateClient(@PathParam("username") final String username) {
+    @Path(Routes.USER_ACTIVATION)
+    public Response activateClient(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
@@ -128,8 +128,9 @@ public class UserEndpoint {
     }
 
     @DELETE
-    @Path("{username : .+}/active")
-    public Response deactivateClient(@PathParam("username") final String username) {
+    @Path(Routes.USER_ACTIVATION)
+    public Response deactivateClient(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
@@ -139,9 +140,10 @@ public class UserEndpoint {
     }
 
     @DELETE
-    @Path("{username : .+}")
+    @Path(Routes.USER_BY_USERNAME)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response deleteByUsername(@PathParam("username") final String username) {
+    public Response deleteByUsername(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
