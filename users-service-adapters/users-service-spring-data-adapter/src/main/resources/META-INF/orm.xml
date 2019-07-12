@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<entity-mappings
+        xmlns="http://xmlns.jcp.org/xml/ns/persistence/orm"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence/orm http://xmlns.jcp.org/xml/ns/persistence/orm_2_2.xsd"
+        version="2.2">
+
+    <package>ar.edu.itba.cep.users_service.models</package>
+
+    <entity class="User" access="FIELD">
+        <table name="users"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false" updatable="false"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="username">
+                <column name="username" nullable="false" insertable="true" updatable="false"/>
+            </basic>
+            <basic name="active">
+                <column name="active" nullable="false" insertable="true" updatable="true"/>
+            </basic>
+        </attributes>
+    </entity>
+
+    <entity class="UserCredential" access="FIELD">
+        <table name="user_credentials"/>
+        <attributes>
+            <id name="id">
+                <column name="id" nullable="false" updatable="false"/>
+                <generated-value strategy="IDENTITY"/>
+            </id>
+            <basic name="hashedPassword">
+                <column name="hashed_password" nullable="false" insertable="true" updatable="false"/>
+            </basic>
+            <basic name="createdAt">
+                <column name="created_at" nullable="false" insertable="true" updatable="false"/>
+            </basic>
+            <many-to-one name="user" fetch="LAZY" optional="false">
+                <join-column name="user_id"
+                             referenced-column-name="id" nullable="false" insertable="true" updatable="false"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+</entity-mappings>

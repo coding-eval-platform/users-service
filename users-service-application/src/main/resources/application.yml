@@ -1,70 +1,69 @@
 # Default Configuration
 
 spring:
-    profiles:
-        active: dev
+  profiles:
+    active: dev
 
-    main:
-        banner-mode: "off"
+  main:
+    banner-mode: "off"
 
+  flyway:
+    locations: "classpath:db/migrations"
 
-    jpa:
-        hibernate:
-            ddl-auto: none
-        properties:
-            hibernate:
-                show_sql: false
-                format_sql: false
-                jdbc:
-                    lob:
-                        non_contextual_creation: true
-        open-in-view: false
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    open-in-view: false
 
 server:
-    port: 8000
-    error:
-        include-stacktrace: never
-        whitelabel:
-            enabled: false
-        include-exception: false
-    servlet:
-        context-path: /
-    compression:
-        enabled: true
+  port: 8000
+  error:
+    include-stacktrace: never
+    whitelabel:
+      enabled: false
+    include-exception: false
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
 
 ---
 # Configuration for Development Environment
 
 spring:
-    profiles:
-        - dev
-        - development
+  profiles:
+    - dev
+    - development
 
-    datasource:
-        url: jdbc:postgresql://localhost:5432/coding-eval-platform__users-service
-        username: coding-eval-platform__users-service
-        password: coding-eval-platform__users-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/coding-eval-platform__users-service
+    username: coding-eval-platform__users-service
+    password: coding-eval-platform__users-service
 
-    jpa:
-        properties:
-            hibernate:
-                format_sql: true
-                show_sql: true
-
-    flyway:
-        locations: "classpath:db/migrations"
+  jpa:
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
 
 ---
 # Configuration for Staging Environment
 
 spring:
-    profiles:
-        - staging
+  profiles:
+    - staging
 
 ---
 # Configuration for Production Environment
 
 spring:
-    profiles:
-        - prod
-        - production
+  profiles:
+    - prod
+    - production

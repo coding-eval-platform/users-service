@@ -31,21 +31,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jersey</artifactId>
         </dependency>
-
-        <!-- Error management -->
         <dependency>
-            <groupId>com.bellotapps.utils</groupId>
-            <artifactId>error-handler</artifactId>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
         </dependency>
+
 
         <!-- Webapp Commons-->
         <dependency>
             <groupId>com.bellotapps.webapps</groupId>
-            <artifactId>webapps-commons-error-dtos</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.bellotapps.webapps</groupId>
-            <artifactId>webapps-commons-web-dtos</artifactId>
+            <artifactId>webapps-commons-web-jersey-app</artifactId>
         </dependency>
         <dependency>
             <groupId>com.bellotapps.webapps</groupId>
@@ -57,7 +52,13 @@
         </dependency>
         <dependency>
             <groupId>com.bellotapps.webapps</groupId>
-            <artifactId>webapps-commons-web-jersey-app</artifactId>
+            <artifactId>webapps-commons-validation-jersey</artifactId>
+        </dependency>
+
+        <!-- Hibernate Validation annotation processor (checks that validation annotations are correctly placed) -->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator-annotation-processor</artifactId>
         </dependency>
     </dependencies>
 </project>

@@ -1,49 +1,35 @@
 package ar.edu.itba.cep.users_service.models;
 
-import com.bellotapps.webapps_commons.errors.ConstraintViolationError;
-import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
-import com.bellotapps.webapps_commons.validation.annotations.ValidateConstraintsBefore;
 import org.springframework.util.Assert;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.time.Instant;
 import java.util.function.Function;
+
+import static ar.edu.itba.cep.users_service.models.ValidationConstants.*;
 
 /**
  * Represents a credential for {@link User}s of this application.
  */
-@Entity
-@Table(name = "user_credentials")
 public class UserCredential {
 
     /**
      * The credential id.
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
      * The {@link User} owning this credential.
      */
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, updatable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private final User user;
 
     /**
      * The hashed password.
      */
-    @Column(name = "hashed_password", nullable = false, updatable = false)
     private final String hashedPassword;
 
     /**
      * {@link Instant} at which this credential is created.
      */
-    @Column(name = "created_at", nullable = false, updatable = false)
     private final Instant createdAt;
 
 
@@ -107,12 +93,12 @@ public class UserCredential {
      * @param password        The plain password.
      * @param hashingFunction A {@link Function} that takes the password (which is plain), and hashes it.
      * @return A new {@link UserCredential} instance.
-     * @throws CustomConstraintViolationException If any of the values is not valid.
+     * @throws IllegalArgumentException If any of the values is not valid.
      */
-    public static UserCredential buildCredential(final User user,
-                                                 final String password,
-                                                 final Function<String, String> hashingFunction)
-            throws CustomConstraintViolationException {
+    public static UserCredential buildCredential(
+            final User user,
+            final String password,
+            final Function<String, String> hashingFunction) throws IllegalArgumentException {
         return new CredentialsBuilder()
                 .forUser(user)
                 .withPassword(password)
@@ -139,26 +125,6 @@ public class UserCredential {
         /**
          * The plain password.
          */
-        @NotNull(message = "Password is missing.",
-                payload = ConstraintViolationError.ErrorCausePayload.MissingValue.class)
-        @Size(min = ValidationConstants.PASSWORD_MIN_LENGTH,
-                message = "Password too short",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-        @Size(max = ValidationConstants.PASSWORD_MAX_LENGTH,
-                message = "Password too long",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-        @Pattern(regexp = ".*[a-z].*",
-                message = "Password must contain a lowercase letter",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-        @Pattern(regexp = ".*[A-Z].*",
-                message = "Password must contain an uppercase letter",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-        @Pattern(regexp = ".*\\d.*",
-                message = "Password must contain a number",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-        @Pattern(regexp = "^.*[^a-zA-Z0-9].*$",
-                message = "Password must contain a special character",
-                payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
         private String password;
 
         /**
@@ -205,25 +171,68 @@ public class UserCredential {
          * Builds the {@link UserCredential} using the set values.
          *
          * @return The created credential.
-         * @throws CustomConstraintViolationException If any value violates the given constraints.
+         * @throws IllegalArgumentException If any value violates the constraints.
          */
-        private UserCredential build() throws CustomConstraintViolationException {
-            Assert.notNull(user, "The user must be set.");
-            Assert.notNull(hashingFunction, "The hashing function must be set.");
-            return doBuild();
+        private UserCredential build() throws IllegalArgumentException {
+            assertUser(user);
+            assertHashingFunction(hashingFunction);
+            assertPassword(password);
+
+            return new UserCredential(user, hashingFunction.apply(password));
+        }
+
+
+        // ================================
+        // Assertions
+        // ================================
+
+        /**
+         * Asserts that the given {@code user} is valid.
+         *
+         * @param user The {@link User} to be checked.
+         * @throws IllegalArgumentException In case the user is not a valid one.
+         */
+        private static void assertUser(final User user) throws IllegalArgumentException {
+            Assert.notNull(user, "The user is missing");
         }
 
         /**
-         * Method that actually performs the creation of the credential.
+         * Asserts that the given {@code password} is valid.
          *
-         * @return The created credential.
-         * @throws CustomConstraintViolationException If any value violates the given constraints.
-         * @implNote This method expects that not-null validation of {@code user} and {@code hashingFunction}
-         * is already performed.
+         * @param password The password to be checked.
+         * @throws IllegalArgumentException In case the password is not a valid one.
          */
-        @ValidateConstraintsBefore
-        private UserCredential doBuild() throws CustomConstraintViolationException {
-            return new UserCredential(user, hashingFunction.apply(password));
+        private static void assertPassword(final String password) throws IllegalArgumentException {
+            Assert.notNull(password, "The password is missing");
+            Assert.isTrue(password.length() >= PASSWORD_MIN_LENGTH, "Password too short");
+            Assert.isTrue(password.length() <= PASSWORD_MAX_LENGTH, "Password too long");
+            Assert.isTrue(
+                    password.matches(PASSWORD_CONTAINS_LOWERCASE_REGEX),
+                    "Password must contain a lowercase letter"
+            );
+            Assert.isTrue(
+                    password.matches(PASSWORD_CONTAINS_UPPERCASE_REGEX),
+                    "Password must contain a lowercase letter"
+            );
+            Assert.isTrue(
+                    password.matches(PASSWORD_CONTAINS_NUMBER_REGEX),
+                    "Password must contain a number"
+            );
+            Assert.isTrue(
+                    password.matches(PASSWORD_CONTAINS_SPECIAL_CHARACTER_REGEX),
+                    "Password must contain a special character"
+            );
+        }
+
+        /**
+         * Asserts that the given {@code hashingFunction} is valid.
+         *
+         * @param hashingFunction The hashing {@link Function} to be checked.
+         * @throws IllegalArgumentException In case the hashing function is not a valid one.
+         */
+        private static void assertHashingFunction(final Function<String, String> hashingFunction)
+                throws IllegalArgumentException {
+            Assert.notNull(hashingFunction, "The hashing function is missing");
         }
     }
 }

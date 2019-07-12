@@ -1,46 +1,28 @@
 package ar.edu.itba.cep.users_service.models;
 
-import com.bellotapps.webapps_commons.errors.ConstraintViolationError;
-import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
-import com.bellotapps.webapps_commons.validation.annotations.ValidateConstraintsAfter;
+import org.springframework.util.Assert;
 
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_MAX_LENGTH;
+import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_MIN_LENGTH;
 
 /**
  * Represents a user of this application.
  */
-@Entity
-@Table(name = "users")
 public class User {
 
     /**
      * The user's id.
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // TODO: use a random generator?
-    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
      * The username.
      */
-    @NotNull(message = "Username is missing.",
-            payload = ConstraintViolationError.ErrorCausePayload.MissingValue.class)
-    @Size(min = ValidationConstants.USERNAME_MIN_LENGTH,
-            message = "Username too short",
-            payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-    @Size(max = ValidationConstants.USERNAME_MAX_LENGTH,
-            message = "Username too long",
-            payload = ConstraintViolationError.ErrorCausePayload.IllegalValue.class)
-    @Column(name = "username", nullable = false, updatable = false)
     private final String username;
 
     /**
      * A flag indicating whether this user is active (i.e can operate on the application).
      */
-    @Column(name = "active", nullable = false)
     private boolean active;
 
     /**
@@ -56,10 +38,11 @@ public class User {
      * Constructor.
      *
      * @param username The username.
-     * @throws CustomConstraintViolationException In case any value is not a valid one.
+     * @throws IllegalArgumentException In case any value is not a valid one.
      */
-    @ValidateConstraintsAfter
-    public User(final String username) throws CustomConstraintViolationException {
+    public User(final String username) throws IllegalArgumentException {
+        assertUsername(username);
+
         this.id = 0;
         this.username = username;
         this.active = true;
@@ -137,5 +120,21 @@ public class User {
                 "ID: " + id + ", " +
                 "Username: " + username +
                 ']';
+    }
+
+    // ================================
+    // Assertions
+    // ================================
+
+    /**
+     * Asserts that the given {@code username} is valid.
+     *
+     * @param username The username to be checked.
+     * @throws IllegalArgumentException In case the username is not a valid one.
+     */
+    private static void assertUsername(final String username) throws IllegalArgumentException {
+        Assert.notNull(username, "The username is missing");
+        Assert.isTrue(username.length() >= USERNAME_MIN_LENGTH, "The username is too short");
+        Assert.isTrue(username.length() <= USERNAME_MAX_LENGTH, "The username is too long");
     }
 }

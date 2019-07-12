@@ -1,4 +1,4 @@
-package ar.edu.itba.cep.users_service.spring_data_repositories.spring_data_interfaces;
+package ar.edu.itba.cep.users_service.spring_data.interfaces;
 
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.persistence.spring_data.ExtendedJpaRepository;

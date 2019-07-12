@@ -1,7 +1,5 @@
 package ar.edu.itba.cep.users_service.models;
 
-import ar.edu.itba.cep.users_service.models.test_config.ModelsTestConfig;
-import com.bellotapps.webapps_commons.exceptions.CustomConstraintViolationException;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -9,8 +7,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.function.Function;
 
@@ -18,10 +14,6 @@ import java.util.function.Function;
  * Test class for the credential model.
  */
 @ExtendWith(MockitoExtension.class)
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = {
-        ModelsTestConfig.class
-})
 class UserCredentialTest {
 
     /**
@@ -77,7 +69,7 @@ class UserCredentialTest {
      */
     @Test
     void testNullPassword() {
-        Assertions.assertThrows(CustomConstraintViolationException.class,
+        Assertions.assertThrows(IllegalArgumentException.class,
                 () -> UserCredential.buildCredential(mockedUser, null, mockedHashingFunction));
         Mockito.verifyZeroInteractions(mockedUser);
         Mockito.verifyZeroInteractions(mockedHashingFunction);
@@ -141,13 +133,13 @@ class UserCredentialTest {
 
     /**
      * Tests that using the given illegal password does not create a {@link UserCredential}
-     * (i.e a {@link CustomConstraintViolationException} is thrown).
+     * (i.e a {@link IllegalArgumentException} is thrown).
      * Also it verifies that there is no interaction with the {@code mockedUser} and the {@code mockedHashingFunction}.
      *
      * @param illegalPassword A password that is illegal.
      */
     void testIllegalPassword(final String illegalPassword, final String message) {
-        Assertions.assertThrows(CustomConstraintViolationException.class,
+        Assertions.assertThrows(IllegalArgumentException.class,
                 () -> UserCredential.buildCredential(mockedUser, illegalPassword, mockedHashingFunction),
                 message);
         Mockito.verifyZeroInteractions(mockedUser);
