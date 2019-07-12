@@ -2,7 +2,6 @@ package ar.edu.itba.cep.users_service.models;
 
 import org.springframework.util.Assert;
 
-import javax.persistence.*;
 import java.time.Instant;
 import java.util.function.Function;
 
@@ -11,35 +10,26 @@ import static ar.edu.itba.cep.users_service.models.ValidationConstants.*;
 /**
  * Represents a credential for {@link User}s of this application.
  */
-@Entity
-@Table(name = "user_credentials")
 public class UserCredential {
 
     /**
      * The credential id.
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
      * The {@link User} owning this credential.
      */
-    @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, updatable = false)
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private final User user;
 
     /**
      * The hashed password.
      */
-    @Column(name = "hashed_password", nullable = false, updatable = false)
     private final String hashedPassword;
 
     /**
      * {@link Instant} at which this credential is created.
      */
-    @Column(name = "created_at", nullable = false, updatable = false)
     private final Instant createdAt;
 
 

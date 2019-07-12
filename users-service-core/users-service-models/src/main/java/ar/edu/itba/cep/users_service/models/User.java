@@ -2,36 +2,27 @@ package ar.edu.itba.cep.users_service.models;
 
 import org.springframework.util.Assert;
 
-import javax.persistence.*;
-
 import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_MAX_LENGTH;
 import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_MIN_LENGTH;
 
 /**
  * Represents a user of this application.
  */
-@Entity
-@Table(name = "users")
 public class User {
 
     /**
      * The user's id.
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // TODO: use a random generator?
-    @Column(name = "id", nullable = false, updatable = false)
     private final long id;
 
     /**
      * The username.
      */
-    @Column(name = "username", nullable = false, updatable = false)
     private final String username;
 
     /**
      * A flag indicating whether this user is active (i.e can operate on the application).
      */
-    @Column(name = "active", nullable = false)
     private boolean active;
 
     /**
