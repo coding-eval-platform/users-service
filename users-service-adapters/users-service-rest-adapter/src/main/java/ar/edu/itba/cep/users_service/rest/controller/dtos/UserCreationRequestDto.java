@@ -5,6 +5,8 @@ import com.bellotapps.webapps_commons.errors.ConstraintViolationError.ErrorCause
 import com.bellotapps.webapps_commons.errors.ConstraintViolationError.ErrorCausePayload.MissingValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -16,6 +18,8 @@ import static ar.edu.itba.cep.users_service.models.ValidationConstants.*;
  * Data transfer object for a {@link User} creation request.
  * It includes the basic stuff needed to create a {@link User}.
  */
+@Getter
+@ToString(doNotUseGetters = true)
 public class UserCreationRequestDto {
 
     /**
@@ -59,19 +63,5 @@ public class UserCreationRequestDto {
             @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY) final String password) {
         this.username = username;
         this.password = password;
-    }
-
-    /**
-     * @return The {@link User}'s username.
-     */
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * @return The {@link User}'s first password.
-     */
-    public String getPassword() {
-        return password;
     }
 }

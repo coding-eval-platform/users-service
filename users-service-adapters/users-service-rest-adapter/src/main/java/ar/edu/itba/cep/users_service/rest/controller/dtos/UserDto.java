@@ -2,10 +2,12 @@ package ar.edu.itba.cep.users_service.rest.controller.dtos;
 
 import ar.edu.itba.cep.users_service.models.User;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.ToString;
 
 /**
  * Data transfer object for {@link User}s.
  */
+@ToString(doNotUseGetters = true)
 public class UserDto {
 
     /**
@@ -31,7 +33,7 @@ public class UserDto {
     /**
      * @return The {@link User}'s username.
      */
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(value = "username", access = JsonProperty.Access.READ_ONLY)
     public String getUsername() {
         return username;
     }
@@ -39,7 +41,7 @@ public class UserDto {
     /**
      * @return The {@link User}'s {@code active} flag.
      */
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @JsonProperty(value = "active", access = JsonProperty.Access.READ_ONLY)
     public boolean getActive() {
         return active;
     }

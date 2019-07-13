@@ -5,6 +5,8 @@ import com.bellotapps.webapps_commons.errors.ConstraintViolationError.ErrorCause
 import com.bellotapps.webapps_commons.errors.ConstraintViolationError.ErrorCausePayload.MissingValue;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -15,6 +17,8 @@ import static ar.edu.itba.cep.users_service.models.ValidationConstants.*;
 /**
  * Data transfer object for a change of password request.
  */
+@Getter
+@ToString(doNotUseGetters = true)
 public class PasswordChangeRequestDto {
 
     /**
@@ -54,19 +58,5 @@ public class PasswordChangeRequestDto {
             @JsonProperty(value = "newPassword", access = JsonProperty.Access.WRITE_ONLY) final String newPassword) {
         this.currentPassword = currentPassword;
         this.newPassword = newPassword;
-    }
-
-    /**
-     * @return The current password (the one to be changed).
-     */
-    public String getCurrentPassword() {
-        return currentPassword;
-    }
-
-    /**
-     * @return The new password (the one to be set).
-     */
-    public String getNewPassword() {
-        return newPassword;
     }
 }
