@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.services;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
@@ -58,6 +59,25 @@ public interface UserService {
      */
     void changePassword(final String username, final String currentPassword, final String newPassword)
             throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException;
+
+    /**
+     * Adds a {@link Role} to the {@link User} with the given {@code username}.
+     *
+     * @param username The {@link User}'s username.
+     * @param role     The {@link Role} to be added.
+     * @throws NoSuchEntityException    If there is no {@link User} with the given {@code username}.
+     * @throws IllegalArgumentException If the {@link Role} is invalid.
+     */
+    void addRole(final String username, final Role role) throws NoSuchEntityException, IllegalArgumentException;
+
+    /**
+     * Removes a {@link Role} from the {@link User} with the given {@code username}.
+     *
+     * @param username The {@link User}'s username.
+     * @param role     The {@link Role} to be removed.
+     * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
+     */
+    void removeRole(final String username, final Role role) throws NoSuchEntityException;
 
     /**
      * Activates the {@link User} with the given {@code username}.

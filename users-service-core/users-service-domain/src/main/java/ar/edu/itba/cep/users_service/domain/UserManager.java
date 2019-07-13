@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
@@ -19,6 +20,7 @@ import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /**
  * Manager for {@link User}s.
@@ -101,18 +103,27 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
+    public void addRole(final String username, final Role role)
+            throws NoSuchEntityException, IllegalArgumentException {
+        operateOverUserWithUsername(username, user -> user.addRole(role));
+    }
+
+    @Override
+    @Transactional
+    public void removeRole(final String username, final Role role) throws NoSuchEntityException {
+        operateOverUserWithUsername(username, user -> user.removeRole(role));
+    }
+
+    @Override
+    @Transactional
     public void activate(final String username) throws NoSuchEntityException {
-        final var user = loadUser(username);
-        user.activate();
-        userRepository.save(user);
+        operateOverUserWithUsername(username, User::activate);
     }
 
     @Override
     @Transactional
     public void deactivate(final String username) throws NoSuchEntityException {
-        final var user = loadUser(username);
-        user.deactivate();
-        userRepository.save(user);
+        operateOverUserWithUsername(username, User::deactivate);
     }
 
     @Override
@@ -131,6 +142,21 @@ public class UserManager implements UserService {
      */
     private User loadUser(final String username) throws NoSuchEntityException {
         return userRepository.findByUsername(username).orElseThrow(NoSuchEntityException::new);
+    }
+
+    /**
+     * Performs an operation over the {@link User} with the given {@code username}, and then saves the {@link User}.
+     *
+     * @param username      The username.
+     * @param userOperation A {@link Consumer} that takes a {@link User} (the one with the given {@code username}),
+     *                      and performs an operation over it.
+     * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
+     */
+    private void operateOverUserWithUsername(final String username, final Consumer<User> userOperation)
+            throws NoSuchEntityException {
+        final var user = loadUser(username);
+        userOperation.accept(user);
+        userRepository.save(user);
     }
 
     /**
