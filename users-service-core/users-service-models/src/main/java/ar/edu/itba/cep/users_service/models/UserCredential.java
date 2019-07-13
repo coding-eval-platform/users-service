@@ -1,5 +1,8 @@
 package ar.edu.itba.cep.users_service.models;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.util.Assert;
 
 import java.time.Instant;
@@ -10,6 +13,9 @@ import static ar.edu.itba.cep.users_service.models.ValidationConstants.*;
 /**
  * Represents a credential for {@link User}s of this application.
  */
+@Getter
+@ToString(doNotUseGetters = true)
+@EqualsAndHashCode(of = "id", doNotUseGetters = true)
 public class UserCredential {
 
     /**
@@ -58,33 +64,6 @@ public class UserCredential {
         this.createdAt = Instant.now();
     }
 
-    /**
-     * @return The credential id.
-     */
-    public long getId() {
-        return id;
-    }
-
-    /**
-     * @return The {@link User} owning this credential.
-     */
-    public User getUser() {
-        return user;
-    }
-
-    /**
-     * @return The hashed password.
-     */
-    public String getHashedPassword() {
-        return hashedPassword;
-    }
-
-    /**
-     * @return {@link Instant} at which this credential is created.
-     */
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
 
     /**
      * Creates a new {@link UserCredential}.
