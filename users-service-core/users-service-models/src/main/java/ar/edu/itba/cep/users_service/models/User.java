@@ -1,5 +1,8 @@
 package ar.edu.itba.cep.users_service.models;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.util.Assert;
 
 import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_MAX_LENGTH;
@@ -8,6 +11,9 @@ import static ar.edu.itba.cep.users_service.models.ValidationConstants.USERNAME_
 /**
  * Represents a user of this application.
  */
+@Getter
+@ToString(doNotUseGetters = true)
+@EqualsAndHashCode(of = "id", doNotUseGetters = true)
 public class User {
 
     /**
@@ -48,26 +54,6 @@ public class User {
         this.active = true;
     }
 
-    /**
-     * @return The user's id.
-     */
-    public long getId() {
-        return id;
-    }
-
-    /**
-     * @return The username.
-     */
-    public String getUsername() {
-        return username;
-    }
-
-    /**
-     * @return Indicates whether this user is active (i.e can operate on the application).
-     */
-    public boolean isActive() {
-        return active;
-    }
 
     /**
      * Activates this user.
@@ -83,44 +69,6 @@ public class User {
         this.active = false;
     }
 
-    // ================================
-    // equals, hashcode and toString
-    // ================================
-
-    /**
-     * Equals based on the {@code id}.
-     *
-     * @param o The object to be compared with.
-     * @return {@code true} if they are the equals, or {@code false} otherwise.
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof User)) {
-            return false;
-        }
-        final var user = (User) o;
-
-        return id == user.id;
-    }
-
-    /**
-     * @return This user's hashcode, based on the {@code id}.
-     */
-    @Override
-    public int hashCode() {
-        return (int) (id ^ (id >>> 32));
-    }
-
-    @Override
-    public String toString() {
-        return "User: [" +
-                "ID: " + id + ", " +
-                "Username: " + username +
-                ']';
-    }
 
     // ================================
     // Assertions
