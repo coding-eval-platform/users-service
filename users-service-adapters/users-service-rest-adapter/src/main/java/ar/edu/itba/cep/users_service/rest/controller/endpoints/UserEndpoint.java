@@ -1,9 +1,11 @@
 package ar.edu.itba.cep.users_service.rest.controller.endpoints;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
+import ar.edu.itba.cep.users_service.rest.controller.dtos.NoRolesUserDto;
 import ar.edu.itba.cep.users_service.rest.controller.dtos.PasswordChangeRequestDto;
 import ar.edu.itba.cep.users_service.rest.controller.dtos.UserCreationRequestDto;
-import ar.edu.itba.cep.users_service.rest.controller.dtos.UserDto;
+import ar.edu.itba.cep.users_service.rest.controller.dtos.WithRolesUserDto;
 import ar.edu.itba.cep.users_service.services.UserService;
 import com.bellotapps.webapps_commons.config.JerseyController;
 import com.bellotapps.webapps_commons.data_transfer.date_time.DateTimeFormatters;
@@ -24,6 +26,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.function.BiConsumer;
 
 /**
  * Rest Adapter of {@link UserService}, encapsulating {@link User} management.
@@ -64,7 +67,7 @@ public class UserEndpoint {
                                  @PaginationParam final PagingRequest pagingRequest) {
         LOGGER.debug("Getting users matching");
         final var users = userService.findMatching(username, active, pagingRequest)
-                .map(UserDto::new)
+                .map(NoRolesUserDto::new)
                 .content();
         return Response.ok(users).build();
     }
@@ -78,7 +81,7 @@ public class UserEndpoint {
         }
         LOGGER.debug("Getting user by username {}", username);
         return userService.getByUsername(username)
-                .map(UserDto::new)
+                .map(WithRolesUserDto::new)
                 .map(Response::ok)
                 .orElse(Response.status(Response.Status.NOT_FOUND).entity(""))
                 .build();
@@ -116,27 +119,45 @@ public class UserEndpoint {
     }
 
     @PUT
+    @Path(Routes.USER_ROLE_BY_NAME)
+    public Response addRole(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
+            @SuppressWarnings("RSReferenceInspection") @PathParam("role") final Role role) {
+        return operateOverUser(
+                username,
+                (us, uName) -> us.addRole(uName, role),
+                "Adding role {} to user with username {}",
+                role,
+                username
+        );
+    }
+
+    @DELETE
+    @Path(Routes.USER_ROLE_BY_NAME)
+    public Response removeRole(
+            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
+            @SuppressWarnings("RSReferenceInspection") @PathParam("role") final Role role) {
+        return operateOverUser(
+                username,
+                (us, uName) -> us.removeRole(uName, role),
+                "Removing role {} to user with username {}",
+                role,
+                username
+        );
+    }
+
+    @PUT
     @Path(Routes.USER_ACTIVATION)
     public Response activateClient(
             @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
-        if (username == null) {
-            throw new IllegalParamValueException(Collections.singletonList("username"));
-        }
-        LOGGER.debug("Activating user with username {}", username);
-        userService.activate(username);
-        return Response.noContent().build();
+        return operateOverUser(username, UserService::activate, "Activating user with username {}", username);
     }
 
     @DELETE
     @Path(Routes.USER_ACTIVATION)
     public Response deactivateClient(
             @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
-        if (username == null) {
-            throw new IllegalParamValueException(Collections.singletonList("username"));
-        }
-        LOGGER.debug("Deactivating user with username {}", username);
-        userService.deactivate(username);
-        return Response.noContent().build();
+        return operateOverUser(username, UserService::deactivate, "Deactivating user with username {}", username);
     }
 
     @DELETE
@@ -144,11 +165,30 @@ public class UserEndpoint {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response deleteByUsername(
             @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
+        return operateOverUser(username, UserService::delete, "Removing user with username {}", username);
+
+    }
+
+    /**
+     * Performs an operation over a {@link User}, returning a 204 No Content {@link Response}.
+     *
+     * @param username      The username of the {@link User} to which the operation will be applied.
+     * @param userOperation A {@link BiConsumer} that takes the {@link UserService} and the {@code username},
+     *                      and performs the operation.
+     * @param message       A message to be displayed in DEBUG mode by the logger.
+     * @param messageArgs   Arguments for the {@code message} to be logged.
+     * @return The {@link Response}.
+     */
+    private Response operateOverUser(
+            final String username,
+            final BiConsumer<UserService, String> userOperation,
+            final String message,
+            final Object... messageArgs) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
-        LOGGER.debug("Removing user with username {}", username);
-        userService.delete(username);
+        LOGGER.debug(message, messageArgs);
+        userOperation.accept(userService, username);
         return Response.noContent().build();
     }
 }

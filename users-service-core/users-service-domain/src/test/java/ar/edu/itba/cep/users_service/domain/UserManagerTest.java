@@ -6,17 +6,15 @@ import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.models.ValidationConstants;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
+import ar.edu.itba.cep.users_service.services.UserWithRoles;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import com.github.javafaker.Faker;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatcher;
 import org.mockito.Mock;
-import org.mockito.internal.hamcrest.HamcrestArgumentMatcher;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -88,7 +86,7 @@ class UserManagerTest {
         );
         Assertions.assertEquals(
                 username,
-                userManager.getByUsername(username).map(User::getUsername).get(),
+                userManager.getByUsername(username).map(UserWithRoles::getUsername).get(),
                 "The returned user's username does not match the one used to search."
         );
         verifyZeroInteractions(userCredentialRepository);
@@ -118,10 +116,13 @@ class UserManagerTest {
         final var password = generateAcceptedPassword();
         when(userRepository.existsByUsername(username)).thenReturn(false);
         when(userRepository.save(any(User.class))).then(invocation -> invocation.getArguments()[0]);
-        final var user = userManager.register(username, password);
-        verify(userRepository, times(1)).save(user);
+        Assertions.assertDoesNotThrow(
+                () -> userManager.register(username, password),
+                "Registering a User throws an unexpected Exception"
+        );
+        verify(userRepository, times(1)).save(argThat(u -> u.getUsername().equals(username)));
         verify(passwordEncoder, only()).encode(password);
-        verify(userCredentialRepository, only()).save(argThat(belongingToUserWithUsername(username)));
+        verify(userCredentialRepository, only()).save(argThat(uc -> uc.getUser().getUsername().equals(username)));
     }
 
 
@@ -171,7 +172,7 @@ class UserManagerTest {
                 "Changing the password is failing."
         );
         verify(userCredentialRepository, times(1)).findLastForUser(user);
-        verify(userCredentialRepository, times(1)).save(argThat(belongingToUserWithUsername(username)));
+        verify(userCredentialRepository, times(1)).save(argThat(uc -> uc.getUser().getUsername().equals(username)));
         verifyNoMoreInteractions(userCredentialRepository);
         verify(passwordEncoder, times(1)).encode(newPassword);
         verify(passwordEncoder, times(1)).matches(currentPassword, hashing.apply(credential.getHashedPassword()));
@@ -429,25 +430,6 @@ class UserManagerTest {
         when(passwordEncoder.encode(anyString())).then(i -> encoderFunction.apply(i.getArgument(0)));
         when(passwordEncoder.matches(anyString(), anyString()))
                 .then(i -> encoderFunction.apply(i.getArgument(0)).equals(i.getArgument(1)));
-    }
-
-    /**
-     * Creates an {@link ArgumentMatcher} of {@link UserCredential} that expects the
-     * {@link UserCredential} has a {@code user} property whose value is a {@link User} with the given {@code username}.
-     *
-     * @param username The expected username of the {@link User} owning the {@link UserCredential}.
-     * @return The created {@link ArgumentMatcher} of {@link UserCredential}.
-     */
-    private static ArgumentMatcher<UserCredential> belongingToUserWithUsername(final String username) {
-        return new HamcrestArgumentMatcher<>(
-                Matchers.hasProperty(
-                        "user",
-                        Matchers.hasProperty(
-                                "username",
-                                Matchers.equalTo(username)
-                        )
-                )
-        );
     }
 
     /**

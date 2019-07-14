@@ -16,25 +16,30 @@ import java.util.Optional;
 public interface UserService {
 
     /**
-     * Finds {@link User}s, applying optional filters and pagination.
-     * String filters are compared as with the "like" keyword, matching anywhere.
+     * Finds {@link User}s, applying optional filters and pagination. String filters are compared as
+     * with the "like" keyword, matching anywhere.
      *
      * @param username      A filter for the {@link User}'s username.
      * @param active        The {@link User}'s active flag state.
      * @param pagingRequest A {@link PagingRequest} with the paging information.
      * @return The resulting {@link Page}.
-     * @apiNote Those parameter that are {@code null} will not be taken into account (they are optional).
+     * @apiNote Those parameter that are {@code null} will not be taken into account (they are
+     * optional).
      */
-    Page<User> findMatching(final String username, final Boolean active, final PagingRequest pagingRequest);
+    Page<UserWithNoRoles> findMatching(
+            final String username,
+            final Boolean active,
+            final PagingRequest pagingRequest
+    );
 
     /**
      * Retrieves the {@link User} with the given {@code username}.
      *
      * @param username The {@link User}'s username.
-     * @return An {@link Optional} that contains the {@link User} with the given {@code username} if it exists,
-     * or empty otherwise.
+     * @return An {@link Optional} that contains the {@link User} with the given {@code username} if
+     * it exists, or empty otherwise.
      */
-    Optional<User> getByUsername(final String username);
+    Optional<UserWithRoles> getByUsername(final String username);
 
     /**
      * Creates a new {@link User}.
@@ -45,7 +50,7 @@ public interface UserService {
      * @throws UniqueViolationException If the given {@code username} is already in use.
      * @throws IllegalArgumentException If the username or passwords are not valid.
      */
-    User register(final String username, final String password)
+    UserWithNoRoles register(final String username, final String password)
             throws UniqueViolationException, IllegalArgumentException;
 
     /**
@@ -55,9 +60,13 @@ public interface UserService {
      * @param currentPassword The {@link User}'s current password.
      * @param newPassword     The new password.
      * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
-     * @throws UnauthorizedException If the {@code currentPassword} does not match with the actual password
+     * @throws UnauthorizedException If the {@code currentPassword} does not match with the actual
+     *                               password
      */
-    void changePassword(final String username, final String currentPassword, final String newPassword)
+    void changePassword(
+            final String username,
+            final String currentPassword,
+            final String newPassword)
             throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException;
 
     /**
@@ -68,7 +77,8 @@ public interface UserService {
      * @throws NoSuchEntityException    If there is no {@link User} with the given {@code username}.
      * @throws IllegalArgumentException If the {@link Role} is invalid.
      */
-    void addRole(final String username, final Role role) throws NoSuchEntityException, IllegalArgumentException;
+    void addRole(final String username, final Role role)
+            throws NoSuchEntityException, IllegalArgumentException;
 
     /**
      * Removes a {@link Role} from the {@link User} with the given {@code username}.

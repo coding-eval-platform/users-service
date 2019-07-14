@@ -6,6 +6,8 @@ import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import ar.edu.itba.cep.users_service.services.UserService;
+import ar.edu.itba.cep.users_service.services.UserWithNoRoles;
+import ar.edu.itba.cep.users_service.services.UserWithRoles;
 import com.bellotapps.webapps_commons.errors.UniqueViolationError;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
@@ -62,34 +64,44 @@ public class UserManager implements UserService {
 
 
     @Override
-    public Page<User> findMatching(final String username, final Boolean active, final PagingRequest pagingRequest) {
-        return userRepository.findFiltering(username, active, pagingRequest);
+    public Page<UserWithNoRoles> findMatching(
+            final String username,
+            final Boolean active,
+            final PagingRequest pagingRequest) {
+        return userRepository.findFiltering(username, active, pagingRequest)
+                .map(UserWithNoRoles::new);
     }
 
     @Override
-    public Optional<User> getByUsername(final String username) {
-        return userRepository.findByUsername(username);
+    public Optional<UserWithRoles> getByUsername(final String username) {
+        return userRepository.findByUsername(username).map(user -> {
+            user.getRoles().size(); // Initialize Lazy Collection
+            return new UserWithRoles(user);
+        });
     }
 
     @Override
     @Transactional
-    public User register(final String username, final String password)
+    public UserWithNoRoles register(final String username, final String password)
             throws UniqueViolationException, IllegalArgumentException {
         // First check if the username is already in use.
         if (userRepository.existsByUsername(username)) {
             throw new UniqueViolationException(List.of(USERNAME_IN_USE));
         }
 
-        final User user = userRepository.save(new User(username)); // Create a new User, and save it.
+        final User user = userRepository
+                .save(new User(username)); // Create a new User, and save it.
         createCredential(user, password); // Then, create the initial credential for it
 
-        return user;
+        return new UserWithNoRoles(user);
     }
 
     @Override
     @Transactional
-    public void changePassword(final String username, final String currentPassword, final String newPassword)
-            throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException {
+    public void changePassword(
+            final String username,
+            final String currentPassword,
+            final String newPassword) throws NoSuchEntityException, UnauthorizedException, IllegalArgumentException {
         final var user = loadUser(username);
         final var actualCredential = userCredentialRepository.findLastForUser(user)
                 .orElseThrow(() -> new RuntimeException("Invalid system state. This should not happen."));
@@ -145,15 +157,17 @@ public class UserManager implements UserService {
     }
 
     /**
-     * Performs an operation over the {@link User} with the given {@code username}, and then saves the {@link User}.
+     * Performs an operation over the {@link User} with the given {@code username}, and then saves
+     * the {@link User}.
      *
      * @param username      The username.
-     * @param userOperation A {@link Consumer} that takes a {@link User} (the one with the given {@code username}),
-     *                      and performs an operation over it.
+     * @param userOperation A {@link Consumer} that takes a {@link User} (the one with the given
+     *                      {@code username}), and performs an operation over it.
      * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
      */
-    private void operateOverUserWithUsername(final String username, final Consumer<User> userOperation)
-            throws NoSuchEntityException {
+    private void operateOverUserWithUsername(
+            final String username,
+            final Consumer<User> userOperation) throws NoSuchEntityException {
         final var user = loadUser(username);
         userOperation.accept(user);
         userRepository.save(user);
@@ -167,13 +181,14 @@ public class UserManager implements UserService {
      */
     private void createCredential(final User user, final String password) {
         Assert.notNull(user, "The user must not be null");
-        final var credential = UserCredential.buildCredential(user, password, passwordEncoder::encode);
+        final var credential = UserCredential
+                .buildCredential(user, password, passwordEncoder::encode);
         userCredentialRepository.save(credential);
     }
 
     /**
-     * Performs the operation of removing a {@link User} of the system,
-     * removing also all its {@link UserCredential}.
+     * Performs the operation of removing a {@link User} of the system, removing also all its {@link
+     * UserCredential}.
      *
      * @param user The {@link User} to be deleted.
      */

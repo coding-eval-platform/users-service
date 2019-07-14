@@ -8,41 +8,38 @@ import lombok.ToString;
  * Data transfer object for {@link User}s.
  */
 @ToString(doNotUseGetters = true)
-public class UserDto {
+/* package */ abstract class UserDto<T> {
 
     /**
-     * The {@link User}'s username.
+     * The wrapper of a {@link User} to be, in turn, wrapped in this DTO.
      */
-    private final String username;
-
-    /**
-     * The {@link User}'s {@code active} flag.
-     */
-    private final boolean active;
+    private final T userWrapper;
 
     /**
      * Constructor.
      *
-     * @param user The {@link User} to be wrapped in this DTO.
+     * @param userWrapper The wrapper of a {@link User} to be, in turn, wrapped in this DTO.
      */
-    public UserDto(final User user) {
-        this.username = user.getUsername();
-        this.active = user.isActive();
+    /* package */ UserDto(final T userWrapper) {
+        this.userWrapper = userWrapper;
     }
 
     /**
      * @return The {@link User}'s username.
      */
     @JsonProperty(value = "username", access = JsonProperty.Access.READ_ONLY)
-    public String getUsername() {
-        return username;
-    }
+    public abstract String getUsername();
 
     /**
      * @return The {@link User}'s {@code active} flag.
      */
     @JsonProperty(value = "active", access = JsonProperty.Access.READ_ONLY)
-    public boolean getActive() {
-        return active;
+    public abstract boolean isActive();
+
+    /**
+     * @return The wrapper of a {@link User} to be, in turn, wrapped in this DTO.
+     */
+    /* package */ T getUserWrapper() {
+        return userWrapper;
     }
 }
