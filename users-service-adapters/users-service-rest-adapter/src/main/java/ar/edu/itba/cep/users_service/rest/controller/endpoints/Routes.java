@@ -11,5 +11,7 @@ public class Routes {
 
     public static final String USER_CHANGE_OF_PASSWORD = "/users/{username : .+}/password";
 
+    public static final String USER_ROLE_BY_NAME = "/users/{username : .+}/roles/{role : .+}";
+
     public static final String USER_ACTIVATION = "/users/{username : .+}/active";
 }
