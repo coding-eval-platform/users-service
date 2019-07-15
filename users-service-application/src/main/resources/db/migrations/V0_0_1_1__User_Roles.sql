@@ -1,6 +1,6 @@
 CREATE TABLE user_roles
 (
-    user_id BIGSERIAL PRIMARY KEY NOT NULL,
-    role    VARCHAR               NOT NULL,
+    user_id BIGINT,
+    role    VARCHAR,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );
