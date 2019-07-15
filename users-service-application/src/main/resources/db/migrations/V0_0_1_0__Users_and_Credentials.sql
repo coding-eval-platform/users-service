@@ -14,5 +14,5 @@ CREATE TABLE user_credentials
     user_id         BIGINT                NOT NULL,
     hashed_password VARCHAR               NOT NULL,
     created_at      TIMESTAMP             NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
