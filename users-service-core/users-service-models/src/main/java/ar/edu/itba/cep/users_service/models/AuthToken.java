@@ -6,10 +6,7 @@ import lombok.ToString;
 import org.springframework.util.Assert;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Represents a authentication/authorization token belonging to a {@link User}.
@@ -54,6 +51,17 @@ public class AuthToken {
     }
 
     /**
+     * Constructor that assigned all the {@link User}'s {@link Role}s.
+     *
+     * @param user The {@link User} owning the token.
+     */
+    public AuthToken(final User user) {
+        this(user, user.getRoles());
+    }
+
+    /**
+     * Constructor that can assign a given {@link Set} of {@link Role}s.
+     *
      * @param user          The {@link User} owning the token.
      * @param rolesAssigned The {@link Role}s assigned to the token
      *                      (i.e what the {@link User} is allowed to do when presenting this token).
@@ -68,7 +76,7 @@ public class AuthToken {
         assertRoles(rolesAssigned);
         this.id = null;
         this.user = user;
-        this.rolesAssigned = rolesAssigned;
+        this.rolesAssigned = new HashSet<>(rolesAssigned);
         this.createdAt = Instant.now();
         this.valid = true;
     }
@@ -80,6 +88,13 @@ public class AuthToken {
      */
     public Set<Role> getRolesAssigned() {
         return Collections.unmodifiableSet(rolesAssigned);
+    }
+
+    /**
+     * Makes this token invalid.
+     */
+    public void invalidate() {
+        this.valid = false;
     }
 
 
