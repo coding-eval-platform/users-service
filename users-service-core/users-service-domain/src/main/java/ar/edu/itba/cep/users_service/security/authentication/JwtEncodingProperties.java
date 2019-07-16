@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Getter
 @Setter
-@ConfigurationProperties(prefix = "authentication.jwt")
+@ConfigurationProperties(prefix = "authentication.jwt.users-service")
 public class JwtEncodingProperties {
 
     /**
