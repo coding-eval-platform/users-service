@@ -96,7 +96,7 @@ public class AuthenticationConfig {
             final KeyFactory keyFactory,
             final String encodedKey,
             final Function<byte[], S> keySpecGenerator,
-            KeyGenerator<S, K> keyGenerator) {
+            final KeyGenerator<S, K> keyGenerator) {
 
         final var decodedKeyString = Base64Utils.decodeFromString(encodedKey);
         final var keySpec = keySpecGenerator.apply(decodedKeyString);
