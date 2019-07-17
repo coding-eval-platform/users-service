@@ -15,6 +15,7 @@ import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ import java.util.UUID;
  * Manager for {@link AuthTokenService}.
  */
 @Service
+@Transactional(readOnly = true)
 public class AuthTokenManager implements AuthTokenService {
 
     /**
@@ -77,6 +79,7 @@ public class AuthTokenManager implements AuthTokenService {
 
 
     @Override
+    @Transactional
     public RawTokenContainer issueToken(final String username, final String password) throws UnauthenticatedException {
         return userRepository
                 .findByUsername(username)
@@ -98,6 +101,7 @@ public class AuthTokenManager implements AuthTokenService {
     }
 
     @Override
+    @Transactional
     public void blacklistToken(final UUID id) {
         authTokenRepository.findById(id)
                 .ifPresent(authToken -> {
