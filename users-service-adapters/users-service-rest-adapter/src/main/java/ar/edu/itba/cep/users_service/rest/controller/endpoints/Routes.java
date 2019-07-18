@@ -14,4 +14,11 @@ public class Routes {
     public static final String USER_ROLE_BY_NAME = "/users/{username : .+}/roles/{role : .+}";
 
     public static final String USER_ACTIVATION = "/users/{username : .+}/active";
+
+
+    public static final String TOKENS = "/tokens";
+
+    public static final String TOKEN_BY_ID = "/tokens/{id : .+}";
+
+    public static final String TOKEN_REFRESH = "/tokens/{id : .+}/refresh";
 }
