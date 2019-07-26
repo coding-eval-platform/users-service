@@ -96,6 +96,7 @@ public class AuthTokenManager implements AuthTokenService {
     public RawTokenContainer refreshToken(final UUID id) throws UnauthorizedException {
         // TODO: check that the REFRESH role is set and permissions (user, token id, etc).
         return authTokenRepository.findById(id)
+                .filter(AuthToken::isValid)
                 .map(this::buildTokens)
                 .orElseThrow(UnauthorizedException::new);
     }
