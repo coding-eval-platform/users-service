@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * An implementation of a {@link TokenDecoder} using the JWT specification.
  */
 @Component
-public class JwtTokenDecoder implements TokenDecoder {
+/* package */ class JwtTokenDecoder implements TokenDecoder {
 
     /**
      * The roles claim.
@@ -44,7 +44,7 @@ public class JwtTokenDecoder implements TokenDecoder {
      * @param publicKey The {@link PublicKey} used to verify external tokens.
      */
     @Autowired
-    public JwtTokenDecoder(final PublicKey publicKey) {
+    /* package */ JwtTokenDecoder(final PublicKey publicKey) {
         this.publicKey = publicKey;
         this.jwtHandlerAdapter = new CustomJwtHandlerAdapter();
     }
