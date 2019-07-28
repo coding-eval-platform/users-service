@@ -6,22 +6,15 @@
 
     <parent>
         <groupId>ar.edu.itba.cep</groupId>
-        <artifactId>users-service</artifactId>
+        <artifactId>users-service-core</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>users-service-core</artifactId>
+    <artifactId>users-service-commons</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <modules>
-        <module>users-service-commons</module>
-        <module>users-service-models</module>
-        <module>users-service-domain</module>
-        <module>users-service-ports</module>
-    </modules>
 </project>
