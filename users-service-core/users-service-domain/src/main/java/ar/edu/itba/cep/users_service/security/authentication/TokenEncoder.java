@@ -7,7 +7,6 @@ import ar.edu.itba.cep.users_service.models.AuthToken;
  */
 public interface TokenEncoder {
 
-
     /**
      * Encodes the given {@code authToken}.
      *
