@@ -19,6 +19,13 @@
     </properties>
 
     <dependencies>
+        <!-- Commons -->
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>users-service-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <!-- Models -->
         <dependency>
             <groupId>${project.parent.groupId}</groupId>

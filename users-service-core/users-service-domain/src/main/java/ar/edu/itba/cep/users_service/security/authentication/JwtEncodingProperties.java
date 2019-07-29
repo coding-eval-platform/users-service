@@ -3,6 +3,10 @@ package ar.edu.itba.cep.users_service.security.authentication;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.convert.DurationUnit;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 
 /**
  * Properties for configuring encoding of jwt tokens.
@@ -10,7 +14,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "authentication.jwt.users-service")
-public class JwtEncodingProperties {
+/* package */ class JwtEncodingProperties {
 
     /**
      * The private key.
@@ -19,9 +23,11 @@ public class JwtEncodingProperties {
     /**
      * The access token's duration, in seconds.
      */
-    private Long accessTokenDuration;
+    @DurationUnit(ChronoUnit.SECONDS)
+    private Duration accessTokenDuration;
     /**
      * The refresh token's duration, in seconds.
      */
-    private Long refreshTokenDuration;
+    @DurationUnit(ChronoUnit.SECONDS)
+    private Duration refreshTokenDuration;
 }

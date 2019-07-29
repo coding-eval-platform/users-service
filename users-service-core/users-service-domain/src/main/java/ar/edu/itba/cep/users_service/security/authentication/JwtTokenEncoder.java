@@ -2,6 +2,11 @@ package ar.edu.itba.cep.users_service.security.authentication;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
 import io.jsonwebtoken.Jwts;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.security.PrivateKey;
@@ -13,7 +18,8 @@ import java.util.Set;
 /**
  * A {@link TokenEncoder} that uses the jwt spec.
  */
-class JwtTokenEncoder implements TokenEncoder {
+@Component
+/* package */ class JwtTokenEncoder implements TokenEncoder {
 
     /**
      * The {@link PrivateKey} used to sign tokens.
@@ -32,17 +38,16 @@ class JwtTokenEncoder implements TokenEncoder {
     /**
      * Constructor.
      *
-     * @param privateKey           The {@link PrivateKey} used to sign tokens.
-     * @param accessTokenDuration  The {@link Duration} of an access token.
-     * @param refreshTokenDuration The {@link Duration} of a refresh token.
+     * @param privateKey       The {@link PrivateKey} used to sign tokens.
+     * @param durationsWrapper A {@link DurationsWrapper} containing both the {@link Duration}
+     *                         for the access and the refresh tokens.
      */
-    JwtTokenEncoder(
+    /* package */ JwtTokenEncoder(
             final PrivateKey privateKey,
-            final Duration accessTokenDuration,
-            final Duration refreshTokenDuration) {
+            final DurationsWrapper durationsWrapper) {
         this.privateKey = privateKey;
-        this.accessTokenDuration = accessTokenDuration;
-        this.refreshTokenDuration = refreshTokenDuration;
+        this.accessTokenDuration = durationsWrapper.getAccessTokenDuration();
+        this.refreshTokenDuration = durationsWrapper.getRefreshTokenDuration();
     }
 
 
@@ -67,5 +72,24 @@ class JwtTokenEncoder implements TokenEncoder {
                 .signWith(privateKey, Constants.SIGNATURE_ALGORITHM)
                 .compact();
         return new TokensWrapper(accessToken, refreshToken);
+    }
+
+    /**
+     * A wrapper class that contains both the {@link Duration} for the access and the refresh tokens.
+     */
+    @Getter
+    @AllArgsConstructor
+    @EqualsAndHashCode(doNotUseGetters = true)
+    @ToString(doNotUseGetters = true)
+    /* package */ static final class DurationsWrapper {
+
+        /**
+         * The {@link Duration} of an access token.
+         */
+        private final Duration accessTokenDuration;
+        /**
+         * The {@link Duration} of a refresh token.
+         */
+        private final Duration refreshTokenDuration;
     }
 }
