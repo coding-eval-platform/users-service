@@ -74,8 +74,7 @@ public class UserEndpoint {
 
     @GET
     @Path(Routes.USER_BY_USERNAME)
-    public Response getUserByUsername(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
+    public Response getUserByUsername(@PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
         }
@@ -105,7 +104,7 @@ public class UserEndpoint {
     @Path(Routes.USER_CHANGE_OF_PASSWORD)
     @Consumes(MediaType.APPLICATION_JSON)
     public Response changePassword(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
+            @PathParam("username") final String username,
             @Valid final PasswordChangeRequestDto changeDto) {
         if (username == null) {
             throw new IllegalParamValueException(Collections.singletonList("username"));
@@ -121,8 +120,8 @@ public class UserEndpoint {
     @PUT
     @Path(Routes.USER_ROLE_BY_NAME)
     public Response addRole(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
-            @SuppressWarnings("RSReferenceInspection") @PathParam("role") final Role role) {
+            @PathParam("username") final String username,
+            @PathParam("role") final Role role) {
         return operateOverUser(
                 username,
                 (us, uName) -> us.addRole(uName, role),
@@ -135,8 +134,8 @@ public class UserEndpoint {
     @DELETE
     @Path(Routes.USER_ROLE_BY_NAME)
     public Response removeRole(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username,
-            @SuppressWarnings("RSReferenceInspection") @PathParam("role") final Role role) {
+            @PathParam("username") final String username,
+            @PathParam("role") final Role role) {
         return operateOverUser(
                 username,
                 (us, uName) -> us.removeRole(uName, role),
@@ -148,23 +147,20 @@ public class UserEndpoint {
 
     @PUT
     @Path(Routes.USER_ACTIVATION)
-    public Response activateClient(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
+    public Response activateClient(@PathParam("username") final String username) {
         return operateOverUser(username, UserService::activate, "Activating user with username {}", username);
     }
 
     @DELETE
     @Path(Routes.USER_ACTIVATION)
-    public Response deactivateClient(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
+    public Response deactivateClient(@PathParam("username") final String username) {
         return operateOverUser(username, UserService::deactivate, "Deactivating user with username {}", username);
     }
 
     @DELETE
     @Path(Routes.USER_BY_USERNAME)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response deleteByUsername(
-            @SuppressWarnings("RSReferenceInspection") @PathParam("username") final String username) {
+    public Response deleteByUsername(@PathParam("username") final String username) {
         return operateOverUser(username, UserService::delete, "Removing user with username {}", username);
 
     }

@@ -66,7 +66,7 @@ public class AuthTokenEndpoint {
 
     @PUT
     @Path(Routes.TOKEN_REFRESH)
-    public Response refreshToken(@SuppressWarnings("RSReferenceInspection") @PathParam("id") final UUID id) {
+    public Response refreshToken(@PathParam("id") final UUID id) {
         if (id == null) {
             throw new IllegalParamValueException(List.of("id"));
         }
@@ -77,7 +77,7 @@ public class AuthTokenEndpoint {
 
     @DELETE
     @Path(Routes.TOKEN_BY_ID)
-    public Response blacklistToken(@SuppressWarnings("RSReferenceInspection") @PathParam("id") final UUID id) {
+    public Response blacklistToken(@PathParam("id") final UUID id) {
         if (id == null) {
             throw new IllegalParamValueException(List.of("id"));
         }
