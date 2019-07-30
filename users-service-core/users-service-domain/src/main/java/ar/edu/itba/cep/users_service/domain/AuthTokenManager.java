@@ -13,12 +13,15 @@ import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthenticatedException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
+
+import static ar.edu.itba.cep.users_service.security.authentication.Constants.REFRESH_GRANT;
 
 /**
  * Manager for {@link AuthTokenService}.
@@ -93,6 +96,7 @@ public class AuthTokenManager implements AuthTokenService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('" + REFRESH_GRANT + "') and @authTokenAuthorizationProvider.isOwner(#id, principal)")
     public RawTokenContainer refreshToken(final UUID id) throws UnauthorizedException {
         // TODO: check that the REFRESH role is set and permissions (user, token id, etc).
         return authTokenRepository.findById(id)
@@ -103,6 +107,7 @@ public class AuthTokenManager implements AuthTokenService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN') or @authTokenAuthorizationProvider.isOwner(#id, principal)")
     public void blacklistToken(final UUID id) {
         authTokenRepository.findById(id)
                 .ifPresent(authToken -> {
@@ -113,6 +118,7 @@ public class AuthTokenManager implements AuthTokenService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
     public List<AuthToken> listTokens(final String username) throws NoSuchEntityException {
         return userRepository.findByUsername(username)
                 .map(authTokenRepository::getUserTokens)

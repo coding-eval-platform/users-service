@@ -15,10 +15,13 @@ import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+import org.springframework.util.ClassUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -64,6 +67,7 @@ public class UserManager implements UserService {
 
 
     @Override
+    @PreAuthorize("hasAuthority('ADMIN')")
     public Page<UserWithNoRoles> findMatching(
             final String username,
             final Boolean active,
@@ -73,15 +77,25 @@ public class UserManager implements UserService {
     }
 
     @Override
+    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
     public Optional<UserWithRoles> getByUsername(final String username) {
-        return userRepository.findByUsername(username).map(user -> {
-            user.getRoles().size(); // Initialize Lazy Collection
-            return new UserWithRoles(user);
-        });
+        return findWithRoles(username);
     }
 
     @Override
+    @PreAuthorize("isFullyAuthenticated()")
+    public Optional<UserWithRoles> getActualUser() {
+        final var principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (!ClassUtils.isAssignable(String.class, principal.getClass())) {
+            throw new RuntimeException("The authentication principal must be a String!");
+        }
+        return findWithRoles((String) principal);
+    }
+
+
+    @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public UserWithNoRoles register(final String username, final String password)
             throws UniqueViolationException, IllegalArgumentException {
         // First check if the username is already in use.
@@ -89,15 +103,14 @@ public class UserManager implements UserService {
             throw new UniqueViolationException(List.of(USERNAME_IN_USE));
         }
 
-        final User user = userRepository
-                .save(new User(username)); // Create a new User, and save it.
+        final User user = userRepository.save(new User(username)); // Create a new User, and save it.
         createCredential(user, password); // Then, create the initial credential for it
-
         return new UserWithNoRoles(user);
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
     public void changePassword(
             final String username,
             final String currentPassword,
@@ -115,6 +128,7 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void addRole(final String username, final Role role)
             throws NoSuchEntityException, IllegalArgumentException {
         operateOverUserWithUsername(username, user -> user.addRole(role));
@@ -122,28 +136,46 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void removeRole(final String username, final Role role) throws NoSuchEntityException {
         operateOverUserWithUsername(username, user -> user.removeRole(role));
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void activate(final String username) throws NoSuchEntityException {
         operateOverUserWithUsername(username, User::activate);
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deactivate(final String username) throws NoSuchEntityException {
         operateOverUserWithUsername(username, User::deactivate);
     }
 
     @Override
     @Transactional
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void delete(final String username) {
         userRepository.findByUsername(username).ifPresent(this::deleteUser);
     }
 
+
+    /**
+     * Searches for the {@link User} with the given {@code username}, wrapping it in a {@link UserWithRoles} instance.
+     *
+     * @param username The username used to search.
+     * @return An {@link Optional} with the {@link UserWithRoles} wrapping the {@link User}
+     * with the given {@code username} if it exists, or {@code null} otherwise.
+     */
+    private Optional<UserWithRoles> findWithRoles(final String username) {
+        return userRepository.findByUsername(username).map(user -> {
+            user.getRoles().size(); // Initialize Lazy Collection
+            return new UserWithRoles(user);
+        });
+    }
 
     /**
      * Loads the {@link User} with the given {@code username} if it exists.

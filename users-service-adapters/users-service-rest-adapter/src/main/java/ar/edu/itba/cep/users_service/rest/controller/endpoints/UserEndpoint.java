@@ -84,7 +84,17 @@ public class UserEndpoint {
                 .map(Response::ok)
                 .orElse(Response.status(Response.Status.NOT_FOUND).entity(""))
                 .build();
+    }
 
+    @GET
+    @Path(Routes.USER_ACTUAL)
+    public Response getActualUsername() {
+        LOGGER.debug("Getting actual user");
+        return userService.getActualUser()
+                .map(WithRolesUserDto::new)
+                .map(Response::ok)
+                .orElse(Response.status(Response.Status.NOT_FOUND).entity(""))
+                .build();
     }
 
     @POST

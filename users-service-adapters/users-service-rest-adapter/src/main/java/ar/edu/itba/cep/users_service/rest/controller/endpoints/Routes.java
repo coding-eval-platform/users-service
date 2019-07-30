@@ -9,6 +9,8 @@ public class Routes {
 
     public static final String USER_BY_USERNAME = "/users/{username : .+}";
 
+    public static final String USER_ACTUAL = "/actual-user";
+
     public static final String USER_CHANGE_OF_PASSWORD = "/users/{username : .+}/password";
 
     public static final String USER_ROLE_BY_NAME = "/users/{username : .+}/roles/{role : .+}";
