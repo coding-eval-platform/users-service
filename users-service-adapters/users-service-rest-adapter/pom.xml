@@ -29,13 +29,19 @@
             <artifactId>users-service-services</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
+
 
         <!-- Third party libraries-->
+        <!-- Coding Eval Platform Commons Libraries -->
+        <dependency>
+            <groupId>ar.edu.itba.cep</groupId>
+            <artifactId>commons-web-authentication</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>ar.edu.itba.cep</groupId>
+            <artifactId>commons-web-authentication-jwt</artifactId>
+        </dependency>
+
         <!-- Spring Boot Jersey Starter -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -46,31 +52,11 @@
             <artifactId>jaxb-api</artifactId>
         </dependency>
 
-        <!-- Spring Boot Security Starter -->
+        <!-- Lombok -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <!-- Spring Boot Configuration properties processor -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- JSON Web Tokens -->
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-impl</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-jackson</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <!-- Webapp Commons-->

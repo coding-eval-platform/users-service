@@ -24,6 +24,7 @@
         <com.github.javafaker.javafaker.version>0.17.2</com.github.javafaker.javafaker.version>
         <com.spotify.dockerfile-maven.version>1.4.10</com.spotify.dockerfile-maven.version>
         <org.springframework.cloud.version>Greenwich.SR2</org.springframework.cloud.version>
+        <ar.edu.itba.cep.commons.version>0.0.1-RELEASE</ar.edu.itba.cep.commons.version>
     </properties>
 
     <modules>
@@ -38,6 +39,13 @@
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
                 <version>${org.springframework.cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>ar.edu.itba.cep</groupId>
+                <artifactId>commons-bom</artifactId>
+                <version>${ar.edu.itba.cep.commons.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -93,6 +101,27 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-coding-eval-platform-maven</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/coding-eval-platform/maven</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>bintray-coding-eval-platform-maven</id>
+            <name>bintray-plugins</name>
+            <url>https://dl.bintray.com/coding-eval-platform/maven</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <licenses>
         <license>
