@@ -4,6 +4,7 @@ import com.bellotapps.webapps_commons.data_transfer.json.ApiObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * A configuration class to create a custom {@link ApiObjectMapper}.
@@ -17,7 +18,8 @@ public class ApiObjectMapperConfig {
      * @return The {@link ApiObjectMapper} bean.
      */
     @Bean
-    public ApiObjectMapper apiObjectMapper() {
+    @Primary
+    public ApiObjectMapper customApiObjectMapper() {
         final var apiObjectMapper = new ApiObjectMapper();
         apiObjectMapper.registerModule(new JavaTimeModule());
         return apiObjectMapper;
