@@ -36,10 +36,20 @@ public interface UserService {
      * Retrieves the {@link User} with the given {@code username}.
      *
      * @param username The {@link User}'s username.
-     * @return An {@link Optional} that contains the {@link User} with the given {@code username} if
-     * it exists, or empty otherwise.
+     * @return An {@link Optional} that contains the {@link User} with the given {@code username} if it exists,
+     * or empty otherwise.
      */
     Optional<UserWithRoles> getByUsername(final String username);
+
+    /**
+     * Retrieves information about the currently authenticated {@link User}.
+     *
+     * @return An {@link Optional} that contains the currently authenticated {@link User} if it exists,
+     * or empty otherwise.
+     * @apiNote The returned type is an {@link Optional} because, the currently authenticated {@link User} might not
+     * exist in the underlying repository (as authentication is stateless). However, this is an unusual situation.
+     */
+    Optional<UserWithRoles> getActualUser();
 
     /**
      * Creates a new {@link User}.
