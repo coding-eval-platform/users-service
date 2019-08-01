@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.spring_data;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import ar.edu.itba.cep.users_service.spring_data.interfaces.SpringDataUserRepository;
@@ -100,5 +101,10 @@ public class SpringDataUserRepositoryAdapter implements UserRepository, WriterRe
             return predicates.stream().reduce(cb.and(), cb::and);
         };
         return PagingMapper.map(repository.findAll(specification, pageable));
+    }
+
+    @Override
+    public boolean existsWithRole(final Role role) {
+        return repository.existsByRolesContains(role);
     }
 }

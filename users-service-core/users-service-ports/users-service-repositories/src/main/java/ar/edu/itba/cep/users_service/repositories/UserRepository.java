@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.repositories;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
@@ -38,4 +39,12 @@ public interface UserRepository extends WriterRepository<User, Long> {
      * @return The {@link Page} containing {@link User}s matching.
      */
     Page<User> findFiltering(final String username, final Boolean active, final PagingRequest pagingRequest);
+
+    /**
+     * Indicates whether a {@link User} exists with the given {@code role}.
+     *
+     * @param role The {@link Role} to be checked.
+     * @return {@code true} if there is a {@link User} with the given {@code role}, or {@code false} otherwise.
+     */
+    boolean existsWithRole(final Role role);
 }

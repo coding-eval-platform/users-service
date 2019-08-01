@@ -14,6 +14,9 @@ import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +28,7 @@ import org.springframework.util.ClassUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -32,7 +36,13 @@ import java.util.function.Consumer;
  */
 @Service
 @Transactional(readOnly = true)
-public class UserManager implements UserService {
+public class UserManager implements UserService, InitializingBean {
+
+    /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserManager.class);
+
 
     /**
      * Repository for {@link User}s.
@@ -65,6 +75,11 @@ public class UserManager implements UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Override
+    @Transactional
+    public void afterPropertiesSet() {
+        createAdminUser();
+    }
 
     @Override
     @PreAuthorize("hasAuthority('ADMIN')")
@@ -227,6 +242,23 @@ public class UserManager implements UserService {
     private void deleteUser(final User user) {
         userCredentialRepository.deleteByUser(user);
         userRepository.delete(user);
+    }
+
+    /**
+     * Creates an admin user if there is any.
+     */
+    private void createAdminUser() {
+        if (!userRepository.existsWithRole(Role.ADMIN)) {
+            LOGGER.info("No Admin user exists... Creating a new one");
+            final var username = UUID.randomUUID().toString();
+            final var randomString = UUID.randomUUID().toString();
+            final var password = randomString.toLowerCase() + randomString.toUpperCase() + "1!";
+            final var user = new User(username);
+            user.addRole(Role.ADMIN);
+            final User savedUser = userRepository.save(user);
+            createCredential(savedUser, password);
+            LOGGER.info("Created admin user with username {} and password {}", username, password);
+        }
     }
 
     /**

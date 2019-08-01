@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.spring_data.interfaces;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.persistence.spring_data.ExtendedJpaRepository;
 import org.springframework.stereotype.Repository;
@@ -28,4 +29,12 @@ public interface SpringDataUserRepository extends ExtendedJpaRepository<User, Lo
      * @return {@code true} if a {@link User} exists with the given {@code username}, or {@code false} otherwise.
      */
     boolean existsByUsername(final String username);
+
+    /**
+     * Indicates whether a {@link User} exists with the given {@code role}.
+     *
+     * @param role The {@link Role} to be checked.
+     * @return {@code true} if there is a {@link User} with the given {@code role}, or {@code false} otherwise.
+     */
+    boolean existsByRolesContains(final Role role);
 }
