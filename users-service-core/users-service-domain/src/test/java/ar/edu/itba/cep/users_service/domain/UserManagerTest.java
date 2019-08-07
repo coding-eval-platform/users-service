@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -40,6 +41,8 @@ class UserManagerTest {
      * This reference is saved in order to configure its behaviour in each test.
      */
     private final UserCredentialRepository userCredentialRepository;
+
+    private final ApplicationEventPublisher publisher;
     /**
      * The {@link PasswordEncoder} that is injected into a {@link UserManager} that will be tested.
      * This reference is saved in order to configure its behaviour in each test.
@@ -64,11 +67,18 @@ class UserManagerTest {
     public UserManagerTest(
             @Mock(name = "userRepository") final UserRepository userRepository,
             @Mock(name = "userCredentialRepository") final UserCredentialRepository userCredentialRepository,
+            @Mock(name = "publisher") final ApplicationEventPublisher publisher,
             @Mock(name = "passwordEncoder") final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
+        this.publisher = publisher;
         this.passwordEncoder = passwordEncoder;
-        this.userManager = new UserManager(userRepository, userCredentialRepository, passwordEncoder);
+        this.userManager = new UserManager(
+                userRepository,
+                userCredentialRepository,
+                publisher,
+                passwordEncoder
+        );
     }
 
 
@@ -90,6 +100,7 @@ class UserManagerTest {
                 "The returned user's username does not match the one used to search."
         );
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -104,6 +115,7 @@ class UserManagerTest {
                 "Searching for a user that does not exists is not returning an empty Optional."
         );
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -123,6 +135,7 @@ class UserManagerTest {
         verify(userRepository, times(1)).save(argThat(u -> u.getUsername().equals(username)));
         verify(passwordEncoder, only()).encode(password);
         verify(userCredentialRepository, only()).save(argThat(uc -> uc.getUser().getUsername().equals(username)));
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -143,6 +156,7 @@ class UserManagerTest {
         );
         verify(userRepository, never()).save(any(User.class));
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -177,6 +191,7 @@ class UserManagerTest {
         verify(passwordEncoder, times(1)).encode(newPassword);
         verify(passwordEncoder, times(1)).matches(currentPassword, hashing.apply(credential.getHashedPassword()));
         verifyNoMoreInteractions(passwordEncoder);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -207,6 +222,7 @@ class UserManagerTest {
         );
         verify(userCredentialRepository, only()).findLastForUser(user);
         verify(passwordEncoder, only()).matches(wrongPassword, hashing.apply(credential.getHashedPassword()));
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -287,6 +303,7 @@ class UserManagerTest {
         verify(userRepository, times(1)).findByUsername(username);
         verify(userRepository, times(1)).save(user);
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -309,6 +326,12 @@ class UserManagerTest {
         verify(userRepository, times(1)).findByUsername(username);
         verify(userRepository, times(1)).save(user);
         verifyZeroInteractions(userCredentialRepository);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserDeactivatedEvent e) -> e.getUser().getUsername().equals(username)
+                )
+        );
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -350,6 +373,11 @@ class UserManagerTest {
         verify(userRepository, times(1)).delete(user);
         verifyNoMoreInteractions(userRepository);
         verify(userCredentialRepository, only()).deleteByUser(user);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserDeletedEvent e) -> e.getUser().getUsername().equals(username)
+                )
+        );
     }
 
     /**
@@ -366,6 +394,7 @@ class UserManagerTest {
         );
         verify(userRepository, only()).findByUsername(username);
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -389,6 +418,7 @@ class UserManagerTest {
                 () -> userManagerAction.accept(userManager, username), message
         );
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -419,6 +449,7 @@ class UserManagerTest {
         verify(userRepository, times(1)).save(user);
         verifyNoMoreInteractions(userRepository);
         roleOperationOverUser.accept(verify(user, only()), role);
+        verifyZeroInteractions(publisher);
     }
 
     /**

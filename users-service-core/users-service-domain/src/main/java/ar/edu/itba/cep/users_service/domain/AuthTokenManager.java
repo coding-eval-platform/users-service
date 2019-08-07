@@ -13,6 +13,7 @@ import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthenticatedException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.event.EventListener;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -101,6 +102,7 @@ public class AuthTokenManager implements AuthTokenService {
         // TODO: check that the REFRESH role is set and permissions (user, token id, etc).
         return authTokenRepository.findById(id)
                 .filter(AuthToken::isValid)
+                .filter(t -> t.getUser().isActive()) // Should not happen, but just in case...
                 .map(this::buildTokens)
                 .orElseThrow(UnauthorizedException::new);
     }
@@ -109,20 +111,33 @@ public class AuthTokenManager implements AuthTokenService {
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN') or @authTokenAuthorizationProvider.isOwner(#id, principal)")
     public void blacklistToken(final UUID id) {
-        authTokenRepository.findById(id)
-                .ifPresent(authToken -> {
-                    authToken.invalidate();
-                    authTokenRepository.save(authToken);
-                    // TODO: stream token blacklisted event.
-                });
+        authTokenRepository.findById(id).ifPresent(this::blacklistToken);
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
+    @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
     public List<AuthToken> listTokens(final String username) throws NoSuchEntityException {
         return userRepository.findByUsername(username)
                 .map(authTokenRepository::getUserTokens)
                 .orElseThrow(NoSuchEntityException::new);
+    }
+
+
+    /**
+     * An {@link EventListener} that can handle {@link UserDeactivatedEvent}s and {@link UserDeletedEvent}s.
+     * It will blacklist all the {@link AuthToken} belonging to the {@link User} being affected
+     * (indicated in the received event).
+     *
+     * @param userEvent The {@link UserEvent} being handled.
+     */
+    @EventListener(
+            classes = {
+                    UserDeactivatedEvent.class,
+                    UserDeletedEvent.class,
+            }
+    )
+    public void removeAllTokens(final UserEvent userEvent) {
+        authTokenRepository.getUserTokens(userEvent.getUser()).forEach(this::blacklistToken);
     }
 
 
@@ -154,5 +169,19 @@ public class AuthTokenManager implements AuthTokenService {
                 wrapper.getAccessToken(),
                 wrapper.getRefreshToken()
         );
+    }
+
+    /**
+     * Blacklist's the given {@code authToken}.
+     *
+     * @param authToken The {@link AuthToken} to be blacklisted.
+     */
+    private void blacklistToken(final AuthToken authToken) {
+        // Perform only if the token is not valid.
+        if (authToken.isValid()) {
+            authToken.invalidate();
+            authTokenRepository.save(authToken);
+            // TODO: stream token blacklisted event.
+        }
     }
 }
