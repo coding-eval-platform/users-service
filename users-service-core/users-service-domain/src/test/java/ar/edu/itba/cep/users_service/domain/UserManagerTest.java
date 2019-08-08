@@ -1,5 +1,8 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
 import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
@@ -245,7 +248,20 @@ class UserManagerTest {
      */
     @Test
     void testAddARole(@Mock(name = "user") final User user) {
-        testRoleOperation(user, UserManager::addRole, User::addRole, "Adding a role throws an unexpected exception.");
+        final var username = generateAcceptedUsername();
+        final var role = getARole();
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
+        doNothing().when(user).addRole(role);
+        Assertions.assertDoesNotThrow(
+                () -> userManager.addRole(username, role),
+                "Adding a role throws an unexpected exception."
+        );
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(userRepository, times(1)).save(user);
+        verifyNoMoreInteractions(userRepository);
+        verify(user, only()).addRole(role);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -255,7 +271,24 @@ class UserManagerTest {
      */
     @Test
     void testRemoveARole(@Mock(name = "user") final User user) {
-        testRoleOperation(user, UserManager::removeRole, User::removeRole, "Removing a role throws an unexpected exception.");
+        final var username = generateAcceptedUsername();
+        final var role = getARole();
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
+        doNothing().when(user).removeRole(role);
+        Assertions.assertDoesNotThrow(
+                () -> userManager.removeRole(username, role),
+                "Removing a role throws an unexpected exception."
+        );
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(userRepository, times(1)).save(user);
+        verifyNoMoreInteractions(userRepository);
+        verify(user, only()).removeRole(role);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserRoleRemovedEvent e) -> e.getUser() == user && e.getRole() == role
+                )
+        );
     }
 
 
@@ -328,7 +361,7 @@ class UserManagerTest {
         verifyZeroInteractions(userCredentialRepository);
         verify(publisher, only()).publishEvent(
                 argThat(
-                        (final UserDeactivatedEvent e) -> e.getUser().getUsername().equals(username)
+                        (final UserDeactivatedEvent e) -> e.getUser() == user
                 )
         );
         verifyZeroInteractions(publisher);
@@ -375,7 +408,7 @@ class UserManagerTest {
         verify(userCredentialRepository, only()).deleteByUser(user);
         verify(publisher, only()).publishEvent(
                 argThat(
-                        (final UserDeletedEvent e) -> e.getUser().getUsername().equals(username)
+                        (final UserDeletedEvent e) -> e.getUser() == user
                 )
         );
     }
@@ -418,37 +451,6 @@ class UserManagerTest {
                 () -> userManagerAction.accept(userManager, username), message
         );
         verifyZeroInteractions(userCredentialRepository);
-        verifyZeroInteractions(publisher);
-    }
-
-    /**
-     * Test a {@link Role} operation.
-     *
-     * @param user                     The {@link User} being operated.
-     * @param roleOperationOverManager The {@link RoleOperation} being invoked.
-     * @param roleOperationOverUser    A {@link BiConsumer} of {@link User} and {@link Role}
-     *                                 representing the underlying operation over the {@link User} that is being
-     *                                 invoked by the {@link UserManager}.
-     * @param message                  A message to be displayed in case of failure.
-     */
-    private void testRoleOperation(
-            final User user,
-            final RoleOperation roleOperationOverManager,
-            final BiConsumer<User, Role> roleOperationOverUser,
-            final String message) {
-        final var username = generateAcceptedUsername();
-        final var role = getARole();
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
-        roleOperationOverUser.accept(doNothing().when(user), role);
-        Assertions.assertDoesNotThrow(
-                () -> roleOperationOverManager.operate(userManager, username, role),
-                message
-        );
-        verify(userRepository, times(1)).findByUsername(username);
-        verify(userRepository, times(1)).save(user);
-        verifyNoMoreInteractions(userRepository);
-        roleOperationOverUser.accept(verify(user, only()), role);
         verifyZeroInteractions(publisher);
     }
 

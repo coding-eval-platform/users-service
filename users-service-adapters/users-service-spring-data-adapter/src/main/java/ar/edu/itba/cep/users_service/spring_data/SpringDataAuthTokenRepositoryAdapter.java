@@ -1,6 +1,7 @@
 package ar.edu.itba.cep.users_service.spring_data;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.repositories.AuthTokenRepository;
 import ar.edu.itba.cep.users_service.spring_data.interfaces.SpringDataAuthTokenRepository;
@@ -53,5 +54,10 @@ public class SpringDataAuthTokenRepositoryAdapter
     @Override
     public List<AuthToken> getUserTokens(final User user) {
         return repository.findByUser(user);
+    }
+
+    @Override
+    public List<AuthToken> getUserTokensWithRole(final User user, final Role role) {
+        return repository.findByUserAndRole(user, role);
     }
 }

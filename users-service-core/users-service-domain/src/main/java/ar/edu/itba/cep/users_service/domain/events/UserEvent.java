@@ -1,5 +1,6 @@
-package ar.edu.itba.cep.users_service.domain;
+package ar.edu.itba.cep.users_service.domain.events;
 
+import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -12,7 +13,7 @@ import org.springframework.util.Assert;
 @Getter
 @ToString(doNotUseGetters = true)
 @EqualsAndHashCode(doNotUseGetters = true)
-/* package */ abstract class UserEvent {
+public abstract class UserEvent {
 
     /**
      * The user being affected.
@@ -32,13 +33,21 @@ import org.springframework.util.Assert;
 
 
     /**
+     * @param user
+     * @param role
+     * @return
+     */
+    public static UserRoleRemovedEvent roleRemoved(final User user, final Role role) {
+        return new UserRoleRemovedEvent(user, role);
+    }
+
+    /**
      * Creates a {@link UserDeactivatedEvent}.
      *
      * @param user The {@link User} being deactivated.
      * @return The created {@link UserDeactivatedEvent}.
      */
-    /* package */
-    static UserDeactivatedEvent deactivated(final User user) {
+    public static UserDeactivatedEvent deactivated(final User user) {
         return new UserDeactivatedEvent(user);
     }
 
@@ -48,8 +57,7 @@ import org.springframework.util.Assert;
      * @param user The {@link User} being deleted.
      * @return The created {@link UserDeletedEvent}.
      */
-    /* package */
-    static UserDeletedEvent deleted(final User user) {
+    public static UserDeletedEvent deleted(final User user) {
         return new UserDeletedEvent(user);
     }
 }

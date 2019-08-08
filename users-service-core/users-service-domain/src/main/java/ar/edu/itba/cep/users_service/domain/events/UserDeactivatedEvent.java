@@ -1,4 +1,4 @@
-package ar.edu.itba.cep.users_service.domain;
+package ar.edu.itba.cep.users_service.domain.events;
 
 import ar.edu.itba.cep.users_service.models.User;
 import lombok.EqualsAndHashCode;
@@ -9,9 +9,9 @@ import lombok.ToString;
  * A {@link UserEvent} that indicates that a {@link User} is being deactivated.
  */
 @Getter
-@ToString(doNotUseGetters = true)
+@ToString(doNotUseGetters = true, callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-final class UserDeactivatedEvent extends UserEvent {
+public final class UserDeactivatedEvent extends UserEvent {
 
     /**
      * Constructor.

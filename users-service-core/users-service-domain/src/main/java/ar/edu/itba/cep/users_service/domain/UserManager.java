@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
@@ -163,7 +164,10 @@ public class UserManager implements UserService, InitializingBean {
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void removeRole(final String username, final Role role) throws NoSuchEntityException {
-        operateOverUserWithUsername(username, user -> user.removeRole(role));
+        operateOverUserWithUsername(username, user -> {
+            user.removeRole(role);
+            publisher.publishEvent(UserEvent.roleRemoved(user, role));
+        });
     }
 
     @Override

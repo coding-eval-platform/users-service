@@ -1,5 +1,9 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
 import ar.edu.itba.cep.users_service.models.AuthToken;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
@@ -124,20 +128,40 @@ public class AuthTokenManager implements AuthTokenService {
 
 
     /**
+     * An {@link EventListener} that can handle {@link UserRoleRemovedEvent}s.
+     * It will blacklist all the {@link AuthToken} belonging to the {@link User} being affected,
+     * that contains the {@link ar.edu.itba.cep.users_service.models.Role} being removed.
+     *
+     * @param userRoleRemovedEvent The {@link UserRoleRemovedEvent} being handled.
+     */
+    @Transactional
+    @EventListener(
+            classes = {
+                    UserRoleRemovedEvent.class,
+            }
+    )
+    public void removeAllUserTokensWithRole(final UserRoleRemovedEvent userRoleRemovedEvent) {
+        authTokenRepository.getUserTokensWithRole(userRoleRemovedEvent.getUser(), userRoleRemovedEvent.getRole())
+                .forEach(this::blacklistToken);
+    }
+
+    /**
      * An {@link EventListener} that can handle {@link UserDeactivatedEvent}s and {@link UserDeletedEvent}s.
      * It will blacklist all the {@link AuthToken} belonging to the {@link User} being affected
      * (indicated in the received event).
      *
      * @param userEvent The {@link UserEvent} being handled.
      */
+    @Transactional
     @EventListener(
             classes = {
                     UserDeactivatedEvent.class,
                     UserDeletedEvent.class,
             }
     )
-    public void removeAllTokens(final UserEvent userEvent) {
-        authTokenRepository.getUserTokens(userEvent.getUser()).forEach(this::blacklistToken);
+    public void removeAllUserTokens(final UserEvent userEvent) {
+        authTokenRepository.getUserTokens(userEvent.getUser())
+                .forEach(this::blacklistToken);
     }
 
 
