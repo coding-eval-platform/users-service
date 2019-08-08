@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,6 +57,11 @@ public class UserManager implements UserService, InitializingBean {
     private final UserCredentialRepository userCredentialRepository;
 
     /**
+     * An {@link ApplicationEventPublisher} to publish relevant events to the rest of the application's components.
+     */
+    private final ApplicationEventPublisher publisher;
+
+    /**
      * {@link PasswordEncoder} used for hashing passwords.
      */
     private final PasswordEncoder passwordEncoder;
@@ -64,14 +71,18 @@ public class UserManager implements UserService, InitializingBean {
      *
      * @param userRepository           Repository for {@link User}s.
      * @param userCredentialRepository Repository for {@link UserCredential}s.
+     * @param publisher                An {@link ApplicationEventPublisher} to publish relevant events
+     *                                 to the rest of the application's components.
      * @param passwordEncoder          {@link PasswordEncoder} used for hashing passwords.
      */
     @Autowired
     public UserManager(final UserRepository userRepository,
                        final UserCredentialRepository userCredentialRepository,
+                       final ApplicationEventPublisher publisher,
                        final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
+        this.publisher = publisher;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -92,7 +103,7 @@ public class UserManager implements UserService, InitializingBean {
     }
 
     @Override
-    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
+    @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
     public Optional<UserWithRoles> getByUsername(final String username) {
         return findWithRoles(username);
     }
@@ -125,7 +136,7 @@ public class UserManager implements UserService, InitializingBean {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAuthority('ADMIN') or principal == #username")
+    @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
     public void changePassword(
             final String username,
             final String currentPassword,
@@ -153,7 +164,10 @@ public class UserManager implements UserService, InitializingBean {
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void removeRole(final String username, final Role role) throws NoSuchEntityException {
-        operateOverUserWithUsername(username, user -> user.removeRole(role));
+        operateOverUserWithUsername(username, user -> {
+            user.removeRole(role);
+            publisher.publishEvent(UserEvent.roleRemoved(user, role));
+        });
     }
 
     @Override
@@ -167,7 +181,10 @@ public class UserManager implements UserService, InitializingBean {
     @Transactional
     @PreAuthorize("hasAuthority('ADMIN')")
     public void deactivate(final String username) throws NoSuchEntityException {
-        operateOverUserWithUsername(username, User::deactivate);
+        operateOverUserWithUsername(username, user -> {
+            user.deactivate();
+            publisher.publishEvent(UserEvent.deactivated(user));
+        });
     }
 
     @Override
@@ -240,6 +257,7 @@ public class UserManager implements UserService, InitializingBean {
      * @param user The {@link User} to be deleted.
      */
     private void deleteUser(final User user) {
+        publisher.publishEvent(UserEvent.deleted(user));
         userCredentialRepository.deleteByUser(user);
         userRepository.delete(user);
     }

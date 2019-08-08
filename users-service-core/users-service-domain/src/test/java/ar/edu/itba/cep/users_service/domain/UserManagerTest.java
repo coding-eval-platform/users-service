@@ -1,5 +1,8 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
+import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
 import ar.edu.itba.cep.users_service.models.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
@@ -16,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -40,6 +44,8 @@ class UserManagerTest {
      * This reference is saved in order to configure its behaviour in each test.
      */
     private final UserCredentialRepository userCredentialRepository;
+
+    private final ApplicationEventPublisher publisher;
     /**
      * The {@link PasswordEncoder} that is injected into a {@link UserManager} that will be tested.
      * This reference is saved in order to configure its behaviour in each test.
@@ -58,17 +64,26 @@ class UserManagerTest {
      *                                 to be injected into a {@link UserManager} that will be tested.
      * @param userCredentialRepository A mocked {@link UserCredentialRepository}
      *                                 to be injected into a {@link UserManager} that will be tested.
+     * @param publisher                A mocked {@link ApplicationEventPublisher}
+     *                                 to be injected into a {@link UserManager} that will be tested.
      * @param passwordEncoder          A mocked {@link PasswordEncoder}
      *                                 to be injected into a {@link UserManager} that will be tested.
      */
     public UserManagerTest(
             @Mock(name = "userRepository") final UserRepository userRepository,
             @Mock(name = "userCredentialRepository") final UserCredentialRepository userCredentialRepository,
+            @Mock(name = "publisher") final ApplicationEventPublisher publisher,
             @Mock(name = "passwordEncoder") final PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
+        this.publisher = publisher;
         this.passwordEncoder = passwordEncoder;
-        this.userManager = new UserManager(userRepository, userCredentialRepository, passwordEncoder);
+        this.userManager = new UserManager(
+                userRepository,
+                userCredentialRepository,
+                publisher,
+                passwordEncoder
+        );
     }
 
 
@@ -90,6 +105,7 @@ class UserManagerTest {
                 "The returned user's username does not match the one used to search."
         );
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -104,6 +120,7 @@ class UserManagerTest {
                 "Searching for a user that does not exists is not returning an empty Optional."
         );
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -123,6 +140,7 @@ class UserManagerTest {
         verify(userRepository, times(1)).save(argThat(u -> u.getUsername().equals(username)));
         verify(passwordEncoder, only()).encode(password);
         verify(userCredentialRepository, only()).save(argThat(uc -> uc.getUser().getUsername().equals(username)));
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -143,6 +161,7 @@ class UserManagerTest {
         );
         verify(userRepository, never()).save(any(User.class));
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -177,6 +196,7 @@ class UserManagerTest {
         verify(passwordEncoder, times(1)).encode(newPassword);
         verify(passwordEncoder, times(1)).matches(currentPassword, hashing.apply(credential.getHashedPassword()));
         verifyNoMoreInteractions(passwordEncoder);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -207,6 +227,7 @@ class UserManagerTest {
         );
         verify(userCredentialRepository, only()).findLastForUser(user);
         verify(passwordEncoder, only()).matches(wrongPassword, hashing.apply(credential.getHashedPassword()));
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -229,7 +250,20 @@ class UserManagerTest {
      */
     @Test
     void testAddARole(@Mock(name = "user") final User user) {
-        testRoleOperation(user, UserManager::addRole, User::addRole, "Adding a role throws an unexpected exception.");
+        final var username = generateAcceptedUsername();
+        final var role = getARole();
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
+        doNothing().when(user).addRole(role);
+        Assertions.assertDoesNotThrow(
+                () -> userManager.addRole(username, role),
+                "Adding a role throws an unexpected exception."
+        );
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(userRepository, times(1)).save(user);
+        verifyNoMoreInteractions(userRepository);
+        verify(user, only()).addRole(role);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -239,7 +273,24 @@ class UserManagerTest {
      */
     @Test
     void testRemoveARole(@Mock(name = "user") final User user) {
-        testRoleOperation(user, UserManager::removeRole, User::removeRole, "Removing a role throws an unexpected exception.");
+        final var username = generateAcceptedUsername();
+        final var role = getARole();
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
+        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
+        doNothing().when(user).removeRole(role);
+        Assertions.assertDoesNotThrow(
+                () -> userManager.removeRole(username, role),
+                "Removing a role throws an unexpected exception."
+        );
+        verify(userRepository, times(1)).findByUsername(username);
+        verify(userRepository, times(1)).save(user);
+        verifyNoMoreInteractions(userRepository);
+        verify(user, only()).removeRole(role);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserRoleRemovedEvent e) -> e.getUser() == user && e.getRole() == role
+                )
+        );
     }
 
 
@@ -287,6 +338,7 @@ class UserManagerTest {
         verify(userRepository, times(1)).findByUsername(username);
         verify(userRepository, times(1)).save(user);
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -309,6 +361,12 @@ class UserManagerTest {
         verify(userRepository, times(1)).findByUsername(username);
         verify(userRepository, times(1)).save(user);
         verifyZeroInteractions(userCredentialRepository);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserDeactivatedEvent e) -> e.getUser() == user
+                )
+        );
+        verifyZeroInteractions(publisher);
     }
 
     /**
@@ -350,6 +408,11 @@ class UserManagerTest {
         verify(userRepository, times(1)).delete(user);
         verifyNoMoreInteractions(userRepository);
         verify(userCredentialRepository, only()).deleteByUser(user);
+        verify(publisher, only()).publishEvent(
+                argThat(
+                        (final UserDeletedEvent e) -> e.getUser() == user
+                )
+        );
     }
 
     /**
@@ -366,6 +429,7 @@ class UserManagerTest {
         );
         verify(userRepository, only()).findByUsername(username);
         verifyZeroInteractions(userCredentialRepository);
+        verifyZeroInteractions(publisher);
     }
 
 
@@ -389,36 +453,7 @@ class UserManagerTest {
                 () -> userManagerAction.accept(userManager, username), message
         );
         verifyZeroInteractions(userCredentialRepository);
-    }
-
-    /**
-     * Test a {@link Role} operation.
-     *
-     * @param user                     The {@link User} being operated.
-     * @param roleOperationOverManager The {@link RoleOperation} being invoked.
-     * @param roleOperationOverUser    A {@link BiConsumer} of {@link User} and {@link Role}
-     *                                 representing the underlying operation over the {@link User} that is being
-     *                                 invoked by the {@link UserManager}.
-     * @param message                  A message to be displayed in case of failure.
-     */
-    private void testRoleOperation(
-            final User user,
-            final RoleOperation roleOperationOverManager,
-            final BiConsumer<User, Role> roleOperationOverUser,
-            final String message) {
-        final var username = generateAcceptedUsername();
-        final var role = getARole();
-        when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
-        roleOperationOverUser.accept(doNothing().when(user), role);
-        Assertions.assertDoesNotThrow(
-                () -> roleOperationOverManager.operate(userManager, username, role),
-                message
-        );
-        verify(userRepository, times(1)).findByUsername(username);
-        verify(userRepository, times(1)).save(user);
-        verifyNoMoreInteractions(userRepository);
-        roleOperationOverUser.accept(verify(user, only()), role);
+        verifyZeroInteractions(publisher);
     }
 
     /**
