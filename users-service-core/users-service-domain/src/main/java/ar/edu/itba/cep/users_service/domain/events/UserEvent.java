@@ -33,9 +33,11 @@ public abstract class UserEvent {
 
 
     /**
-     * @param user
-     * @param role
-     * @return
+     * Creates a {@link UserRoleRemovedEvent}.
+     *
+     * @param user The {@link User} being affected.
+     * @param role The {@link Role} being removed.
+     * @return The created {@link UserRoleRemovedEvent}.
      */
     public static UserRoleRemovedEvent roleRemoved(final User user, final Role role) {
         return new UserRoleRemovedEvent(user, role);
