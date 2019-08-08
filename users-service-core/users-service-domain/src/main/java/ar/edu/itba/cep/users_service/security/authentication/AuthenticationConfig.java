@@ -1,6 +1,7 @@
 package ar.edu.itba.cep.users_service.security.authentication;
 
-import ar.edu.itba.cep.users_service.commons.KeyHelper;
+import ar.edu.itba.cep.security.EnableKeyFactory;
+import ar.edu.itba.cep.security.KeyHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -18,6 +19,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
  */
 @Configuration
 @EnableConfigurationProperties(JwtEncodingProperties.class)
+@EnableKeyFactory
 public class AuthenticationConfig {
 
     /**

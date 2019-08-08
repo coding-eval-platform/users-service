@@ -19,12 +19,6 @@
     </properties>
 
     <dependencies>
-        <!-- Commons -->
-        <dependency>
-            <groupId>${project.parent.groupId}</groupId>
-            <artifactId>users-service-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
 
         <!-- Models -->
         <dependency>
@@ -47,6 +41,11 @@
 
 
         <!-- Third party libraries-->
+        <!-- Coding Eval Platform Commons Libraries -->
+        <dependency>
+            <groupId>ar.edu.itba.cep</groupId>
+            <artifactId>commons-keys</artifactId>
+        </dependency>
 
         <!-- Spring Boot starter that allows to basic Spring features (e.g Configuration, Components, Beans, etc). -->
         <dependency>

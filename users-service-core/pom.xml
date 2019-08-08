@@ -19,7 +19,6 @@
     </properties>
 
     <modules>
-        <module>users-service-commons</module>
         <module>users-service-models</module>
         <module>users-service-domain</module>
         <module>users-service-ports</module>

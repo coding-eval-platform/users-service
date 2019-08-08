@@ -21,11 +21,6 @@
     <dependencies>
         <dependency>
             <groupId>${project.parent.groupId}</groupId>
-            <artifactId>users-service-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>${project.parent.groupId}</groupId>
             <artifactId>users-service-services</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
