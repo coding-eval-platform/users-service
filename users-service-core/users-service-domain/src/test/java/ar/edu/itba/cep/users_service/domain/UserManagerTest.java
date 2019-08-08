@@ -64,6 +64,8 @@ class UserManagerTest {
      *                                 to be injected into a {@link UserManager} that will be tested.
      * @param userCredentialRepository A mocked {@link UserCredentialRepository}
      *                                 to be injected into a {@link UserManager} that will be tested.
+     * @param publisher                A mocked {@link ApplicationEventPublisher}
+     *                                 to be injected into a {@link UserManager} that will be tested.
      * @param passwordEncoder          A mocked {@link PasswordEncoder}
      *                                 to be injected into a {@link UserManager} that will be tested.
      */
