@@ -157,13 +157,13 @@ public class UserEndpoint {
 
     @PUT
     @Path(Routes.USER_ACTIVATION)
-    public Response activateClient(@PathParam("username") final String username) {
+    public Response activateUser(@PathParam("username") final String username) {
         return operateOverUser(username, UserService::activate, "Activating user with username {}", username);
     }
 
     @DELETE
     @Path(Routes.USER_ACTIVATION)
-    public Response deactivateClient(@PathParam("username") final String username) {
+    public Response deactivateUser(@PathParam("username") final String username) {
         return operateOverUser(username, UserService::deactivate, "Deactivating user with username {}", username);
     }
 
