@@ -25,6 +25,11 @@
     <dependencies>
 
         <!-- Third party libraries -->
+        <!-- Coding Eval Platform Commons Libraries -->
+        <dependency>
+            <groupId>ar.edu.itba.cep</groupId>
+            <artifactId>commons-roles</artifactId>
+        </dependency>
 
         <!-- Spring Boot starter for basic Spring features (e.g Configuration, Components, Beans, etc). -->
         <dependency>

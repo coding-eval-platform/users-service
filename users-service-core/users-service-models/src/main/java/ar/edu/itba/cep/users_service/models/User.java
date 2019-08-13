@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.models;
 
+import ar.edu.itba.cep.roles.Role;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;

@@ -1,7 +1,7 @@
 package ar.edu.itba.cep.users_service.spring_data.interfaces;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;

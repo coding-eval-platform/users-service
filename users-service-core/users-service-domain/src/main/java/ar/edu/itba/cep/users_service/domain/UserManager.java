@@ -1,7 +1,7 @@
 package ar.edu.itba.cep.users_service.domain;
 
 import ar.edu.itba.cep.users_service.domain.events.UserEvent;
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
