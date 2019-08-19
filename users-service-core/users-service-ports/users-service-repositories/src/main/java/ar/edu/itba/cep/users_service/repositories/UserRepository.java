@@ -1,6 +1,6 @@
 package ar.edu.itba.cep.users_service.repositories;
 
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;

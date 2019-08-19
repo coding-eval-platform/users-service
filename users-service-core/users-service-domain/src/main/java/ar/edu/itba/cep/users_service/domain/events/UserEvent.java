@@ -1,6 +1,6 @@
 package ar.edu.itba.cep.users_service.domain.events;
 
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -3,7 +3,7 @@ package ar.edu.itba.cep.users_service.domain;
 import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.models.ValidationConstants;

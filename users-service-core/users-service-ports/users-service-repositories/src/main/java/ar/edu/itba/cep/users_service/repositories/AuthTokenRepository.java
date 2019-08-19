@@ -1,7 +1,7 @@
 package ar.edu.itba.cep.users_service.repositories;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import com.bellotapps.webapps_commons.persistence.repository_utils.repositories.BasicRepository;
 

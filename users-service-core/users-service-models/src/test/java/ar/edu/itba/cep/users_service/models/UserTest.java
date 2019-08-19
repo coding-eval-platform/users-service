@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.models;
 
+import ar.edu.itba.cep.roles.Role;
 import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
