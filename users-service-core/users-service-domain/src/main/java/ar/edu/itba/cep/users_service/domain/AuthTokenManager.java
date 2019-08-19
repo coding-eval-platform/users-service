@@ -1,5 +1,6 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserEvent;
@@ -130,7 +131,7 @@ public class AuthTokenManager implements AuthTokenService {
     /**
      * An {@link EventListener} that can handle {@link UserRoleRemovedEvent}s.
      * It will blacklist all the {@link AuthToken} belonging to the {@link User} being affected,
-     * that contains the {@link ar.edu.itba.cep.users_service.models.Role} being removed.
+     * that contains the {@link Role} being removed.
      *
      * @param userRoleRemovedEvent The {@link UserRoleRemovedEvent} being handled.
      */

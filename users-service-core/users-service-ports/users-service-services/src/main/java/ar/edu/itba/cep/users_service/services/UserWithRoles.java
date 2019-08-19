@@ -1,6 +1,6 @@
 package ar.edu.itba.cep.users_service.services;
 
-import ar.edu.itba.cep.users_service.models.Role;
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import java.util.Set;
 import lombok.EqualsAndHashCode;
