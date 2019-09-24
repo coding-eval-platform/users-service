@@ -24,7 +24,7 @@
         <com.github.javafaker.javafaker.version>0.17.2</com.github.javafaker.javafaker.version>
         <com.spotify.dockerfile-maven.version>1.4.10</com.spotify.dockerfile-maven.version>
         <org.springframework.cloud.version>Greenwich.SR2</org.springframework.cloud.version>
-        <ar.edu.itba.cep.commons.version>0.0.3-RELEASE</ar.edu.itba.cep.commons.version>
+        <ar.edu.itba.cep.commons.version>0.0.5-RELEASE</ar.edu.itba.cep.commons.version>
     </properties>
 
     <modules>
