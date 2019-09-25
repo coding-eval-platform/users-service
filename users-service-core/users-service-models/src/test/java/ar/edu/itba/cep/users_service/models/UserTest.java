@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Test class for the user model.
+ * Test class for {@link User}.
  */
 class UserTest {
 

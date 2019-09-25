@@ -11,7 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.function.Function;
 
 /**
- * Test class for the credential model.
+ * Test class for {@link UserCredential}.
  */
 @ExtendWith(MockitoExtension.class)
 class UserCredentialTest {

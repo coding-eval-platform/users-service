@@ -41,6 +41,8 @@ public class AuthenticationConfig {
     /**
      * Creates a {@link PrivateKey} from the {@link KeyFactory} and the {@link JwtEncodingProperties}.
      *
+     * @param keyFactory            The {@link KeyFactory} needed to create a {@link PrivateKey} instance.
+     * @param jwtEncodingProperties The {@link JwtEncodingProperties} instance with configuration data.
      * @return The {@link PrivateKey}.
      */
     @Bean
