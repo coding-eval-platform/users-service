@@ -23,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.Assert;
 
 import java.util.List;
 import java.util.UUID;
@@ -92,9 +93,9 @@ public class AuthTokenManager implements AuthTokenService {
     public RawTokenContainer issueToken(final String username, final String password) throws UnauthenticatedException {
         return userRepository
                 .findByUsername(username)
-                .filter(user -> validPassword(user, password))
                 .filter(User::isActive) // Check if the user can login
-                .map(AuthToken::new)
+                .filter(user -> validPassword(user, password))
+                .map(AuthToken::forUser)
                 .map(authTokenRepository::save) // Save the token and use the saved instance from now on.
                 .map(this::buildTokens)
                 .orElseThrow(UnauthenticatedException::new)
@@ -122,9 +123,8 @@ public class AuthTokenManager implements AuthTokenService {
     @Override
     @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
     public List<AuthToken> listTokens(final String username) throws NoSuchEntityException {
-        return userRepository.findByUsername(username)
-                .map(authTokenRepository::getUserTokens)
-                .orElseThrow(NoSuchEntityException::new);
+        final var user = userRepository.findByUsername(username).orElseThrow(NoSuchEntityException::new);
+        return authTokenRepository.getUserTokens(user);
     }
 
 
@@ -134,6 +134,8 @@ public class AuthTokenManager implements AuthTokenService {
      * that contains the {@link Role} being removed.
      *
      * @param userRoleRemovedEvent The {@link UserRoleRemovedEvent} being handled.
+     * @throws IllegalArgumentException If the {@code userRoleRemovedEvent} is {@code null},
+     *                                  or if it contains a {@code null} {@link User} or {@link Role}.
      */
     @Transactional
     @EventListener(
@@ -141,9 +143,14 @@ public class AuthTokenManager implements AuthTokenService {
                     UserRoleRemovedEvent.class,
             }
     )
-    public void removeAllUserTokensWithRole(final UserRoleRemovedEvent userRoleRemovedEvent) {
-        authTokenRepository.getUserTokensWithRole(userRoleRemovedEvent.getUser(), userRoleRemovedEvent.getRole())
-                .forEach(this::blacklistToken);
+    public void removeAllUserTokensWithRole(final UserRoleRemovedEvent userRoleRemovedEvent)
+            throws IllegalArgumentException {
+        Assert.notNull(userRoleRemovedEvent, "The event is null");
+        final var user = userRoleRemovedEvent.getUser();
+        final var role = userRoleRemovedEvent.getRole();
+        Assert.notNull(user, "The user in the event must not be null");
+        Assert.notNull(role, "The role in the event must not be null");
+        authTokenRepository.getUserTokensWithRole(user, role).forEach(this::blacklistToken);
     }
 
     /**
@@ -152,6 +159,8 @@ public class AuthTokenManager implements AuthTokenService {
      * (indicated in the received event).
      *
      * @param userEvent The {@link UserEvent} being handled.
+     * @throws IllegalArgumentException If the {@code userEvent} is {@code null},
+     *                                  or if it contains a {@code null} {@link User}.
      */
     @Transactional
     @EventListener(
@@ -160,9 +169,11 @@ public class AuthTokenManager implements AuthTokenService {
                     UserDeletedEvent.class,
             }
     )
-    public void removeAllUserTokens(final UserEvent userEvent) {
-        authTokenRepository.getUserTokens(userEvent.getUser())
-                .forEach(this::blacklistToken);
+    public void removeAllUserTokens(final UserEvent userEvent) throws IllegalArgumentException {
+        Assert.notNull(userEvent, "The event is null");
+        final var user = userEvent.getUser();
+        Assert.notNull(user, "The user in the event must not be null");
+        authTokenRepository.getUserTokens(userEvent.getUser()).forEach(this::blacklistToken);
     }
 
 

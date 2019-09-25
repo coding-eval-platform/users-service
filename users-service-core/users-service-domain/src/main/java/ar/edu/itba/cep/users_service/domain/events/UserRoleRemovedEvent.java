@@ -12,7 +12,7 @@ import lombok.ToString;
 @Getter
 @ToString(doNotUseGetters = true, callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class UserRoleRemovedEvent extends UserEvent {
+public class UserRoleRemovedEvent extends UserEvent {
 
     /**
      * The {@link Role} being removed.

@@ -1,19 +1,17 @@
 package ar.edu.itba.cep.users_service.domain;
 
+import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
-import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
-import ar.edu.itba.cep.users_service.models.ValidationConstants;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
 import ar.edu.itba.cep.users_service.repositories.UserRepository;
 import ar.edu.itba.cep.users_service.services.UserWithRoles;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
-import com.github.javafaker.Faker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,13 +42,17 @@ class UserManagerTest {
      * This reference is saved in order to configure its behaviour in each test.
      */
     private final UserCredentialRepository userCredentialRepository;
-
+    /**
+     * The {@link ApplicationEventPublisher} that is injected to the {@link UserManager}.
+     * This reference is saved in order to configure its behaviour in each test.
+     */
     private final ApplicationEventPublisher publisher;
     /**
      * The {@link PasswordEncoder} that is injected into a {@link UserManager} that will be tested.
      * This reference is saved in order to configure its behaviour in each test.
      */
     private final PasswordEncoder passwordEncoder;
+
     /**
      * The {@link UserManager} to be tested.
      */
@@ -92,7 +94,7 @@ class UserManagerTest {
      */
     @Test
     void testSearchForUser() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         final var user = new User(username);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Assertions.assertTrue(
@@ -113,7 +115,7 @@ class UserManagerTest {
      */
     @Test
     void testSearchForNonExistenceUserReturnsEmptyOptional() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertTrue(
                 userManager.getByUsername(username).isEmpty(),
@@ -129,8 +131,8 @@ class UserManagerTest {
      */
     @Test
     void testUserIsCreatedIfUsernameIsUnique() {
-        final var username = generateAcceptedUsername();
-        final var password = generateAcceptedPassword();
+        final var username = TestHelper.validUsername();
+        final var password = TestHelper.validPassword();
         when(userRepository.existsByUsername(username)).thenReturn(false);
         when(userRepository.save(any(User.class))).then(invocation -> invocation.getArguments()[0]);
         Assertions.assertDoesNotThrow(
@@ -151,8 +153,8 @@ class UserManagerTest {
      */
     @Test
     void testUsernameUniqueness() {
-        final var username = generateAcceptedUsername();
-        final var password = generateAcceptedPassword();
+        final var username = TestHelper.validUsername();
+        final var password = TestHelper.validPassword();
         when(userRepository.existsByUsername(username)).thenReturn(true);
         Assertions.assertThrows(
                 UniqueViolationException.class,
@@ -179,13 +181,13 @@ class UserManagerTest {
             @Mock(name = "credential") final UserCredential credential) {
         final Function<CharSequence, String> hashing = CharSequence::toString;
         preparePasswordEncoder(hashing);
-        final var username = generateAcceptedUsername();
-        final var currentPassword = generateAcceptedPassword();
+        final var username = TestHelper.validUsername();
+        final var currentPassword = TestHelper.validPassword();
         when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userCredentialRepository.findLastForUser(user)).thenReturn(Optional.of(credential));
         when(user.getUsername()).thenReturn(username);
-        final var newPassword = generateAcceptedPassword() + "another";
+        final var newPassword = TestHelper.validPassword() + "another";
         Assertions.assertDoesNotThrow(
                 () -> userManager.changePassword(username, currentPassword, newPassword),
                 "Changing the password is failing."
@@ -213,12 +215,12 @@ class UserManagerTest {
             @Mock(name = "credential") final UserCredential credential) {
         final Function<CharSequence, String> hashing = CharSequence::toString;
         preparePasswordEncoder(hashing);
-        final var username = generateAcceptedUsername();
-        final var currentPassword = generateAcceptedPassword();
+        final var username = TestHelper.validUsername();
+        final var currentPassword = TestHelper.validPassword();
         when(credential.getHashedPassword()).thenReturn(hashing.apply(currentPassword));
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userCredentialRepository.findLastForUser(user)).thenReturn(Optional.of(credential));
-        final var newPassword = generateAcceptedPassword() + "another";
+        final var newPassword = TestHelper.validPassword() + "another";
         final var wrongPassword = currentPassword + "Wrong!";
         Assertions.assertThrows(
                 UnauthorizedException.class,
@@ -235,7 +237,7 @@ class UserManagerTest {
      */
     @Test
     void testChangingPasswordToNonExistenceUserThrowsNoSuchEntityException() {
-        final var currentPassword = generateAcceptedPassword();
+        final var currentPassword = TestHelper.validPassword();
         final var newPassword = currentPassword + "another";
         testNonExistenceActionThrowsNoSuchEntityException(
                 (userManager, username) -> userManager.changePassword(username, currentPassword, newPassword),
@@ -250,8 +252,8 @@ class UserManagerTest {
      */
     @Test
     void testAddARole(@Mock(name = "user") final User user) {
-        final var username = generateAcceptedUsername();
-        final var role = getARole();
+        final var username = TestHelper.validUsername();
+        final var role = TestHelper.randomRole();
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
         doNothing().when(user).addRole(role);
@@ -273,8 +275,8 @@ class UserManagerTest {
      */
     @Test
     void testRemoveARole(@Mock(name = "user") final User user) {
-        final var username = generateAcceptedUsername();
-        final var role = getARole();
+        final var username = TestHelper.validUsername();
+        final var role = TestHelper.randomRole();
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userRepository.save(user)).then(invocation -> invocation.getArguments()[0]);
         doNothing().when(user).removeRole(role);
@@ -299,7 +301,7 @@ class UserManagerTest {
      */
     @Test
     void testAddRoleToNonExistenceUserThrowsNoSuchEntityException() {
-        final var role = getARole();
+        final var role = TestHelper.randomRole();
         testNonExistenceActionThrowsNoSuchEntityException(
                 (userManager, username) -> userManager.addRole(username, role),
                 "Trying to add a role to a user that does not exist is not throwing NoSuchEntityException."
@@ -311,7 +313,7 @@ class UserManagerTest {
      */
     @Test
     void testRemoveRoleToNonExistenceUserThrowsNoSuchEntityException() {
-        final var role = getARole();
+        final var role = TestHelper.randomRole();
         testNonExistenceActionThrowsNoSuchEntityException(
                 (userManager, username) -> userManager.removeRole(username, role),
                 "Trying to remove a role from a user that does not exist is not throwing NoSuchEntityException."
@@ -325,7 +327,7 @@ class UserManagerTest {
      */
     @Test
     void testUserActivation() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         final var user = new User(username);
         user.deactivate();
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
@@ -348,7 +350,7 @@ class UserManagerTest {
      */
     @Test
     void testUserDeactivation() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         final var user = new User(username);
         user.activate(); // This is the default, but just in case...
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
@@ -397,7 +399,7 @@ class UserManagerTest {
      */
     @Test
     void testDeletingAUserDoesNotFail() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         final var user = new User(username);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Assertions.assertDoesNotThrow(
@@ -421,7 +423,7 @@ class UserManagerTest {
      */
     @Test
     void testDeletingNonExistenceUserDoesNotFail() {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertDoesNotThrow(
                 () -> userManager.delete(username),
@@ -446,7 +448,7 @@ class UserManagerTest {
     private void testNonExistenceActionThrowsNoSuchEntityException(
             final BiConsumer<UserManager, String> userManagerAction,
             final String message) {
-        final var username = generateAcceptedUsername();
+        final var username = TestHelper.validUsername();
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertThrows(
                 NoSuchEntityException.class,
@@ -465,48 +467,5 @@ class UserManagerTest {
         when(passwordEncoder.encode(anyString())).then(i -> encoderFunction.apply(i.getArgument(0)));
         when(passwordEncoder.matches(anyString(), anyString()))
                 .then(i -> encoderFunction.apply(i.getArgument(0)).equals(i.getArgument(1)));
-    }
-
-    /**
-     * @return A random username whose length is between the valid limits.
-     */
-    private static String generateAcceptedUsername() {
-        return Faker.instance()
-                .lorem()
-                .fixedString(ValidationConstants.USERNAME_MAX_LENGTH)
-                .replaceAll("\\s+", "a"); // Changes all white spaces into any character
-    }
-
-    /**
-     * @return A password that is valid.
-     */
-    private static String generateAcceptedPassword() {
-        return "Some Password 1!";
-    }
-
-    /**
-     * @return A random {@link Role}.
-     */
-    private static Role getARole() {
-        final var roles = Role.values();
-        final var index = (int) Faker.instance().number().numberBetween(0L, roles.length);
-        return roles[index];
-    }
-
-    /**
-     * A {@link FunctionalInterface} for operations over {@link User}s involving a {@link Role},
-     * through a {@link UserManager}
-     */
-    @FunctionalInterface
-    private interface RoleOperation {
-        /**
-         * Performs an operation over a {@link User} with the given {@code username}, involving the given {@code role},
-         * through the given {@link UserManager}.
-         *
-         * @param userManager The {@link UserManager} through which the operation is performed.
-         * @param username    The username of the {@link User} being operated.
-         * @param role        The {@link Role} involved in the operation.
-         */
-        void operate(final UserManager userManager, final String username, final Role role);
     }
 }

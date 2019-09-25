@@ -11,7 +11,7 @@ import lombok.ToString;
 @Getter
 @ToString(doNotUseGetters = true, callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class UserDeactivatedEvent extends UserEvent {
+public class UserDeactivatedEvent extends UserEvent {
 
     /**
      * Constructor.

@@ -52,15 +52,6 @@ public class AuthToken {
     }
 
     /**
-     * Constructor that assigned all the {@link User}'s {@link Role}s.
-     *
-     * @param user The {@link User} owning the token.
-     */
-    public AuthToken(final User user) {
-        this(user, user.getRoles());
-    }
-
-    /**
      * Constructor that can assign a given {@link Set} of {@link Role}s.
      *
      * @param user          The {@link User} owning the token.
@@ -72,12 +63,10 @@ public class AuthToken {
      *                      token).
      * @throws IllegalArgumentException In case any value is not a valid one.
      */
-    public AuthToken(final User user, final Set<Role> rolesAssigned) throws IllegalArgumentException {
-        assertUser(user);
-        assertRoles(rolesAssigned);
+    private AuthToken(final User user, final Set<Role> rolesAssigned) throws IllegalArgumentException {
         this.id = null;
         this.user = user;
-        this.rolesAssigned = new HashSet<>(rolesAssigned);
+        this.rolesAssigned = Optional.ofNullable(rolesAssigned).map(HashSet::new).orElseGet(HashSet::new);
         this.createdAt = Instant.now();
         this.valid = true;
     }
@@ -121,7 +110,42 @@ public class AuthToken {
      * @throws IllegalArgumentException In case the {@link Role}s {@link Set} is not a valid one.
      */
     private static void assertRoles(final Set<Role> roles) throws IllegalArgumentException {
-        Assert.notNull(roles, "The roles Set must not be null");
-        Assert.isTrue(roles.stream().noneMatch(Objects::isNull), "The roles set contains nulls");
+        Assert.isTrue(
+                Objects.isNull(roles) || roles.stream().noneMatch(Objects::isNull),
+                "If present, the roles set must not contain nulls"
+        );
+    }
+
+    // ================================
+    // Factory methods
+    // ================================
+
+    /**
+     * Creates an {@link AuthToken} for the given {@code user}.
+     *
+     * @param user The {@link User} for which the {@link AuthToken} is being created.
+     * @return The created {@link AuthToken}.
+     */
+    public static AuthToken forUser(final User user) {
+        assertUser(user);
+        return new AuthToken(user, user.getRoles());
+    }
+
+    /**
+     * Creates an {@link AuthToken} for the given {@code user}, assigning the given {@code roles}.
+     *
+     * @param user  The {@link User} for which the {@link AuthToken} is being created.
+     * @param roles The {@link Role}s assigned to the token
+     *              (i.e what the {@link User} is allowed to do when presenting this token).
+     *              Note that these {@link Role}s don't have to be the same
+     *              as the given {@code user} {@link Role}s
+     *              (for example, the {@code user} might have been granted a {@link Role} using only this
+     *              token).
+     * @return The created {@link AuthToken}.
+     */
+    public static AuthToken forUserWithRoles(final User user, final Set<Role> roles) {
+        assertUser(user);
+        assertRoles(roles);
+        return new AuthToken(user, roles);
     }
 }
