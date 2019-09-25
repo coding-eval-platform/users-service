@@ -94,7 +94,7 @@ public class AuthTokenManager implements AuthTokenService {
                 .findByUsername(username)
                 .filter(user -> validPassword(user, password))
                 .filter(User::isActive) // Check if the user can login
-                .map(AuthToken::new)
+                .map(AuthToken::forUser)
                 .map(authTokenRepository::save) // Save the token and use the saved instance from now on.
                 .map(this::buildTokens)
                 .orElseThrow(UnauthenticatedException::new)
