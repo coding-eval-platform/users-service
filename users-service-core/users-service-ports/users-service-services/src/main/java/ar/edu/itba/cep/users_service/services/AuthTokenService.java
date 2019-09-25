@@ -34,6 +34,8 @@ public interface AuthTokenService {
      * @param id The token's id.
      * @return A {@link RawTokenContainer} with the new information of the token.
      * Will include a new refresh token.
+     * @throws UnauthorizedException If the {@link AuthToken} with the given {@code id} was invalidated,
+     *                               or if the {@link User} owning such {@link AuthToken} is not active.
      * @apiNote This method can only be executed when the refresh token is presented.
      */
     RawTokenContainer refreshToken(final UUID id) throws UnauthorizedException;
@@ -52,6 +54,7 @@ public interface AuthTokenService {
      * @param username The {@link User}'s username.
      * @return A {@link List} containing the {@link AuthToken}s
      * that belong to the {@link User} with the given {@code username}.
+     * @throws NoSuchEntityException If there is no {@link User} with the given {@code username}.
      */
     List<AuthToken> listTokens(final String username) throws NoSuchEntityException;
 }
