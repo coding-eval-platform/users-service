@@ -1,15 +1,14 @@
 
-# Users service [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/coding-eval-platform/users-service.svg?branch=master)](https://travis-ci.org/coding-eval-platform/users-service)
+# Users service [![GitHub license](https://img.shields.io/badge/license-Apache%20License%202.0-blue.svg?style=flat)](http://www.apache.org/licenses/LICENSE-2.0) [![Build Status](https://travis-ci.org/coding-eval-platform/users-service.svg?branch=master)](https://travis-ci.org/coding-eval-platform/users-service) ![GitHub tag (latest SemVer)](https://img.shields.io/github/tag/coding-eval-platform/users-service.svg)
 
-Service in charge of the user management.
+Service in charge of users management, including basic CRUD operations, and roles assignment.
+This service is also capable of issuing tokens in order to access the whole platform.
 
 ## Features
 
-- Search for users
-- Create users
-- Activate/Deactivate users
-- Change users' password
-- Delete users
+- User management
+- Roles management
+- Authentication/Authorization tokens management
 
 
 
