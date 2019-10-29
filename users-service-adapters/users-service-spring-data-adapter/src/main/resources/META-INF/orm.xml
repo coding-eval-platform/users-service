@@ -53,24 +53,18 @@
 
     <entity class="AuthToken" access="FIELD">
         <table name="auth_tokens"/>
+        <inheritance strategy="JOINED"/>
         <attributes>
             <id name="id">
                 <column name="id" nullable="false" updatable="false"/>
                 <generated-value strategy="AUTO"/>
             </id>
-
             <basic name="createdAt">
                 <column name="created_at" nullable="false" insertable="true" updatable="false"/>
             </basic>
             <basic name="valid">
                 <column name="valid" nullable="false" insertable="true" updatable="true"/>
             </basic>
-
-            <many-to-one name="user" fetch="LAZY" optional="false">
-                <join-column name="user_id"
-                             referenced-column-name="id" nullable="false" insertable="true" updatable="false"/>
-            </many-to-one>
-
             <element-collection name="rolesAssigned" fetch="LAZY">
                 <column name="role" nullable="false" insertable="true" updatable="false"/>
                 <enumerated>STRING</enumerated>
@@ -78,6 +72,28 @@
                     <join-column name="token_id"/>
                 </collection-table>
             </element-collection>
+        </attributes>
+    </entity>
+
+
+    <entity class="UserAuthToken" access="FIELD">
+        <table name="user_auth_tokens"/>
+        <primary-key-join-column name="token_id"/>
+        <attributes>
+            <many-to-one name="user" fetch="LAZY" optional="false">
+                <join-column name="user_id"
+                             referenced-column-name="id" nullable="false" insertable="true" updatable="false"/>
+            </many-to-one>
+        </attributes>
+    </entity>
+
+    <entity class="SubjectAuthToken" access="FIELD">
+        <table name="subject_auth_tokens"/>
+        <primary-key-join-column name="token_id"/>
+        <attributes>
+            <basic name="subject">
+                <column name="subject" nullable="false" insertable="true" updatable="false"/>
+            </basic>
         </attributes>
     </entity>
 </entity-mappings>

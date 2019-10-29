@@ -3,12 +3,8 @@ package ar.edu.itba.cep.users_service.domain;
 import ar.edu.itba.cep.roles.Role;
 import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
-import ar.edu.itba.cep.users_service.models.AuthToken;
-import ar.edu.itba.cep.users_service.models.User;
-import ar.edu.itba.cep.users_service.models.UserCredential;
-import ar.edu.itba.cep.users_service.repositories.AuthTokenRepository;
-import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
-import ar.edu.itba.cep.users_service.repositories.UserRepository;
+import ar.edu.itba.cep.users_service.models.*;
+import ar.edu.itba.cep.users_service.repositories.*;
 import ar.edu.itba.cep.users_service.security.authentication.TokenEncoder;
 import ar.edu.itba.cep.users_service.security.authentication.TokensWrapper;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
@@ -33,35 +29,14 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AuthTokenManagerTest {
 
-    /**
-     * The {@link UserRepository} that is injected to the {@link AuthTokenManager}.
-     * This reference is saved in order to configure its behaviour in each test.
-     */
     private final UserRepository userRepository;
-    /**
-     * The {@link UserCredentialRepository} that is injected to the {@link AuthTokenManager}.
-     * This reference is saved in order to configure its behaviour in each test.
-     */
     private final UserCredentialRepository userCredentialRepository;
-    /**
-     * The {@link AuthTokenRepository} that is injected to the {@link AuthTokenManager}.
-     * This reference is saved in order to configure its behaviour in each test.
-     */
-    private final AuthTokenRepository authTokenRepository;
-    /**
-     * The {@link PasswordEncoder} that is injected to the {@link AuthTokenManager}.
-     * This reference is saved in order to configure its behaviour in each test.
-     */
+    private final AuthTokenRepository<AuthToken> authTokenRepository;
+    private final UserAuthTokenRepository userAuthTokenRepository;
+    private final SubjectAuthTokenRepository subjectAuthTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    /**
-     * The {@link TokenEncoder} that is injected to the {@link AuthTokenManager}.
-     * This reference is saved in order to configure its behaviour in each test.
-     */
     private final TokenEncoder tokenEncoder;
 
-    /**
-     * The {@link AuthTokenManager} being testes.
-     */
     private final AuthTokenManager authTokenManager;
 
 
@@ -77,12 +52,16 @@ class AuthTokenManagerTest {
     AuthTokenManagerTest(
             @Mock(name = "userRepository") final UserRepository userRepository,
             @Mock(name = "userCredentialRepository") final UserCredentialRepository userCredentialRepository,
-            @Mock(name = "authTokenRepository") final AuthTokenRepository authTokenRepository,
+            @Mock(name = "authTokenRepository") final AuthTokenRepository<AuthToken> authTokenRepository,
+            @Mock(name = "userAuthTokenRepository") final UserAuthTokenRepository userAuthTokenRepository,
+            @Mock(name = "subjectAuthTokenRepository") final SubjectAuthTokenRepository subjectAuthTokenRepository,
             @Mock(name = "passwordEncoder") final PasswordEncoder passwordEncoder,
             @Mock(name = "tokenEncoder") final TokenEncoder tokenEncoder) {
         this.userRepository = userRepository;
         this.userCredentialRepository = userCredentialRepository;
         this.authTokenRepository = authTokenRepository;
+        this.userAuthTokenRepository = userAuthTokenRepository;
+        this.subjectAuthTokenRepository = subjectAuthTokenRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenEncoder = tokenEncoder;
 
@@ -90,6 +69,8 @@ class AuthTokenManagerTest {
                 userRepository,
                 userCredentialRepository,
                 authTokenRepository,
+                userAuthTokenRepository,
+                subjectAuthTokenRepository,
                 passwordEncoder,
                 tokenEncoder
         );
@@ -108,7 +89,7 @@ class AuthTokenManagerTest {
      * @param tokensWrapper  A mocked {@link TokensWrapper} (the one being returned by the manager).
      */
     @Test
-    void testIssueToken(
+    void testIssueUserToken(
             @Mock(name = "user") final User user,
             @Mock(name = "userCredential") final UserCredential userCredential,
             @Mock(name = "tokensWrapper") final TokensWrapper tokensWrapper) {
@@ -122,32 +103,76 @@ class AuthTokenManagerTest {
         when(passwordEncoder.matches(inputPassword, hashedPassword)).thenReturn(true);
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         when(userCredentialRepository.findLastForUser(user)).thenReturn(Optional.of(userCredential));
-        when(authTokenRepository.save(any(AuthToken.class))).then(i -> i.getArgument(0));
+        when(userAuthTokenRepository.save(any(UserAuthToken.class))).then(i -> i.getArgument(0));
         when(tokenEncoder.encode(any(AuthToken.class))).thenReturn(tokensWrapper);
 
-        authTokenManager.issueToken(username, inputPassword);
+        authTokenManager.issueTokenForUser(username, inputPassword);
 
         verify(userRepository, only()).findByUsername(username);
         verify(userCredentialRepository, only()).findLastForUser(user);
         verify(passwordEncoder, only()).matches(inputPassword, hashedPassword);
-        verify(authTokenRepository, only()).save(argThat(matchingToken(user, userRoles)));
-        verify(tokenEncoder, only()).encode(argThat(matchingToken(user, userRoles)));
+        verify(userAuthTokenRepository, only()).save(argThat(matchingUserToken(user, userRoles)));
+        verify(tokenEncoder, only()).encode(argThat(matchingUserToken(user, userRoles)));
         verifyZeroInteractions(authTokenRepository, tokenEncoder);
     }
 
     /**
-     * Tests that refreshing an {@link AuthToken} works as expected.
+     * Tests that issuing an {@link AuthToken} works as expected.
      *
-     * @param token         A mocked {@link AuthToken} (the one being tried to be refreshed).
      * @param tokensWrapper A mocked {@link TokensWrapper} (the one being returned by the manager).
      */
     @Test
-    void testRefreshToken(
-            @Mock(name = "token", answer = RETURNS_DEEP_STUBS) final AuthToken token,
+    void testIssueSubjectToken(
+            @Mock(name = "tokensWrapper") final TokensWrapper tokensWrapper) {
+        final var subject = TestHelper.validUsername();
+        final Set<Role> roles = new HashSet<>(Arrays.asList(Role.values()));
+
+        when(subjectAuthTokenRepository.save(any(SubjectAuthToken.class))).then(i -> i.getArgument(0));
+        when(tokenEncoder.encode(any(AuthToken.class))).thenReturn(tokensWrapper);
+
+        authTokenManager.issueTokenForSubject(subject, roles);
+
+        verify(subjectAuthTokenRepository, only()).save(argThat(matchingSubjectToken(subject, roles)));
+        verify(tokenEncoder, only()).encode(argThat(matchingSubjectToken(subject, roles)));
+        verifyZeroInteractions(authTokenRepository, tokenEncoder);
+    }
+
+    /**
+     * Tests that refreshing an {@link UserAuthToken} works as expected.
+     *
+     * @param token         A mocked {@link UserAuthToken} (the one being tried to be refreshed).
+     * @param tokensWrapper A mocked {@link TokensWrapper} (the one being returned by the manager).
+     */
+    @Test
+    void testRefreshUserToken(
+            @Mock(name = "token", answer = RETURNS_DEEP_STUBS) final UserAuthToken token,
             @Mock(name = "tokensWrapper") final TokensWrapper tokensWrapper) {
         final var tokenId = TestHelper.validTokenId();
         when(token.isValid()).thenReturn(true);
         when(token.getUser().isActive()).thenReturn(true);
+
+        when(authTokenRepository.findById(tokenId)).thenReturn(Optional.of(token));
+        when(tokenEncoder.encode(token)).thenReturn(tokensWrapper);
+
+        authTokenManager.refreshToken(tokenId);
+
+        verify(authTokenRepository, only()).findById(tokenId);
+        verify(tokenEncoder, only()).encode(token);
+        verifyZeroInteractions(userRepository, userCredentialRepository, passwordEncoder);
+    }
+
+    /**
+     * Tests that refreshing an {@link SubjectAuthToken} works as expected.
+     *
+     * @param token         A mocked {@link SubjectAuthToken} (the one being tried to be refreshed).
+     * @param tokensWrapper A mocked {@link TokensWrapper} (the one being returned by the manager).
+     */
+    @Test
+    void testRefreshSubjectToken(
+            @Mock(name = "token", answer = RETURNS_DEEP_STUBS) final SubjectAuthToken token,
+            @Mock(name = "tokensWrapper") final TokensWrapper tokensWrapper) {
+        final var tokenId = TestHelper.validTokenId();
+        when(token.isValid()).thenReturn(true);
 
         when(authTokenRepository.findById(tokenId)).thenReturn(Optional.of(token));
         when(tokenEncoder.encode(token)).thenReturn(tokensWrapper);
@@ -202,25 +227,47 @@ class AuthTokenManagerTest {
     }
 
     /**
-     * Tests that listing the {@link AuthToken}s of a {@link User} works as expected.
+     * Tests that listing the {@link UserAuthToken}s of a {@link User} works as expected.
      *
-     * @param user   A mocked {@link User} (the one owning the {@link AuthToken}s being returned).
-     * @param tokens A mocked {@link AuthToken} {@link List} (the one being returned).
+     * @param user   A mocked {@link User} (the one owning the {@link UserAuthToken}s being returned).
+     * @param tokens A mocked {@link UserAuthToken} {@link List} (the one being returned).
      */
     @Test
-    void testListTokens(@Mock(name = "user") final User user, @Mock(name = "tokens") final List<AuthToken> tokens) {
+    void testListUserTokens(
+            @Mock(name = "user") final User user,
+            @Mock(name = "tokens") final List<UserAuthToken> tokens) {
         final var username = TestHelper.validUsername();
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
-        when(authTokenRepository.getUserTokens(user)).thenReturn(tokens);
+        when(userAuthTokenRepository.getUserTokens(user)).thenReturn(tokens);
 
         Assertions.assertEquals(
                 tokens,
-                authTokenManager.listTokens(username),
+                authTokenManager.listUserTokens(username),
                 "The returned list of tokens of a user is not the one being returned by the underlying repository"
         );
 
         verify(userRepository, only()).findByUsername(username);
-        verify(authTokenRepository, only()).getUserTokens(user);
+        verify(userAuthTokenRepository, only()).getUserTokens(user);
+        verifyZeroInteractions(userCredentialRepository, passwordEncoder, tokenEncoder);
+    }
+
+    /**
+     * Tests that listing the {@link SubjectAuthToken}s of a {@link User} works as expected.
+     *
+     * @param tokens A mocked {@link SubjectAuthToken} {@link List} (the one being returned).
+     */
+    @Test
+    void testListSubjectTokens(@Mock(name = "tokens") final List<SubjectAuthToken> tokens) {
+        final var subject = TestHelper.validUsername();
+        when(subjectAuthTokenRepository.getSubjectTokens(subject)).thenReturn(tokens);
+
+        Assertions.assertEquals(
+                tokens,
+                authTokenManager.listSubjectTokens(subject),
+                "The returned list of tokens of a user is not the one being returned by the underlying repository"
+        );
+
+        verify(subjectAuthTokenRepository, only()).getSubjectTokens(subject);
         verifyZeroInteractions(userCredentialRepository, passwordEncoder, tokenEncoder);
     }
 
@@ -238,9 +285,9 @@ class AuthTokenManagerTest {
     void testRemoveAllUserTokensWithRole(
             @Mock(name = "event") final UserRoleRemovedEvent event,
             @Mock(name = "user") final User user,
-            @Mock(name = "token1") final AuthToken token1,
-            @Mock(name = "token2") final AuthToken token2,
-            @Mock(name = "token3") final AuthToken token3) {
+            @Mock(name = "token1") final UserAuthToken token1,
+            @Mock(name = "token2") final UserAuthToken token2,
+            @Mock(name = "token3") final UserAuthToken token3) {
         final var role = TestHelper.randomRole();
         when(event.getUser()).thenReturn(user);
         when(event.getRole()).thenReturn(role);
@@ -250,7 +297,7 @@ class AuthTokenManagerTest {
         doNothing().when(token1).invalidate();
         doNothing().when(token2).invalidate();
 
-        when(authTokenRepository.getUserTokensWithRole(user, role)).thenReturn(List.of(token1, token2, token3));
+        when(userAuthTokenRepository.getUserTokensWithRole(user, role)).thenReturn(List.of(token1, token2, token3));
         when(authTokenRepository.save(token1)).thenReturn(token1);
         when(authTokenRepository.save(token2)).thenReturn(token2);
 
@@ -262,7 +309,7 @@ class AuthTokenManagerTest {
         verify(token2, times(1)).invalidate();
         verifyNoMoreInteractions(token1, token2);
         verify(token3, only()).isValid();
-        verify(authTokenRepository, times(1)).getUserTokensWithRole(user, role);
+        verify(userAuthTokenRepository, times(1)).getUserTokensWithRole(user, role);
         verify(authTokenRepository, times(1)).save(token1);
         verify(authTokenRepository, times(1)).save(token2);
         verifyNoMoreInteractions(authTokenRepository);
@@ -283,9 +330,9 @@ class AuthTokenManagerTest {
     void testRemoveAllUserTokens(
             @Mock(name = "event") final UserEvent event,
             @Mock(name = "user") final User user,
-            @Mock(name = "token1") final AuthToken token1,
-            @Mock(name = "token2") final AuthToken token2,
-            @Mock(name = "token3") final AuthToken token3) {
+            @Mock(name = "token1") final UserAuthToken token1,
+            @Mock(name = "token2") final UserAuthToken token2,
+            @Mock(name = "token3") final UserAuthToken token3) {
         when(event.getUser()).thenReturn(user);
         when(token1.isValid()).thenReturn(true);
         when(token2.isValid()).thenReturn(true);
@@ -293,7 +340,7 @@ class AuthTokenManagerTest {
         doNothing().when(token1).invalidate();
         doNothing().when(token2).invalidate();
 
-        when(authTokenRepository.getUserTokens(user)).thenReturn(List.of(token1, token2, token3));
+        when(userAuthTokenRepository.getUserTokens(user)).thenReturn(List.of(token1, token2, token3));
         when(authTokenRepository.save(token1)).thenReturn(token1);
         when(authTokenRepository.save(token2)).thenReturn(token2);
 
@@ -305,7 +352,7 @@ class AuthTokenManagerTest {
         verify(token2, times(1)).invalidate();
         verifyNoMoreInteractions(token1, token2);
         verify(token3, only()).isValid();
-        verify(authTokenRepository, times(1)).getUserTokens(user);
+        verify(userAuthTokenRepository, times(1)).getUserTokens(user);
         verify(authTokenRepository, times(1)).save(token1);
         verify(authTokenRepository, times(1)).save(token2);
         verifyNoMoreInteractions(authTokenRepository);
@@ -331,7 +378,7 @@ class AuthTokenManagerTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(user));
         Assertions.assertThrows(
                 UnauthenticatedException.class,
-                () -> authTokenManager.issueToken(username, inputPassword),
+                () -> authTokenManager.issueTokenForUser(username, inputPassword),
                 "Issuing a token for a deactivated user is not failing"
         );
         verify(userRepository, only()).findByUsername(username);
@@ -353,7 +400,7 @@ class AuthTokenManagerTest {
         when(userCredentialRepository.findLastForUser(user)).thenReturn(Optional.empty());
         Assertions.assertThrows(
                 UnauthenticatedException.class,
-                () -> authTokenManager.issueToken(username, inputPassword),
+                () -> authTokenManager.issueTokenForUser(username, inputPassword),
                 "Issuing a token when there are no credentials for a user is not failing"
         );
         verify(userRepository, only()).findByUsername(username);
@@ -382,7 +429,7 @@ class AuthTokenManagerTest {
         when(userCredentialRepository.findLastForUser(user)).thenReturn(Optional.of(userCredential));
         Assertions.assertThrows(
                 UnauthenticatedException.class,
-                () -> authTokenManager.issueToken(username, inputPassword),
+                () -> authTokenManager.issueTokenForUser(username, inputPassword),
                 "Issuing a token with an invalid password is not failing"
         );
         verify(userRepository, only()).findByUsername(username);
@@ -418,7 +465,7 @@ class AuthTokenManagerTest {
      * @param token A mocked {@link AuthToken} (the one being tried to be refreshed).
      */
     @Test
-    void testRefreshTokenForNonActiveUser(@Mock(name = "token", answer = RETURNS_DEEP_STUBS) final AuthToken token) {
+    void testRefreshTokenForNonActiveUser(@Mock(name = "token", answer = RETURNS_DEEP_STUBS) final UserAuthToken token) {
         final var tokenId = TestHelper.validTokenId();
         when(token.isValid()).thenReturn(true);
         when(token.getUser().isActive()).thenReturn(false);
@@ -448,7 +495,7 @@ class AuthTokenManagerTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertThrows(
                 UnauthenticatedException.class,
-                () -> authTokenManager.issueToken(username, TestHelper.validPassword()),
+                () -> authTokenManager.issueTokenForUser(username, TestHelper.validPassword()),
                 "Issuing a token for a non existence user is not failing"
         );
         verifyOnlyUserSearch(username);
@@ -490,7 +537,7 @@ class AuthTokenManagerTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.empty());
         Assertions.assertThrows(
                 NoSuchEntityException.class,
-                () -> authTokenManager.listTokens(username),
+                () -> authTokenManager.listUserTokens(username),
                 "Retrieving all tokens for a non existence user is not failing"
         );
         verifyOnlyUserSearch(username);
@@ -592,15 +639,27 @@ class AuthTokenManagerTest {
     // ================================================================================================================
 
     /**
-     * Creates an {@link ArgumentMatcher} of {@link AuthToken} that checks if an {@link AuthToken}
+     * Creates an {@link ArgumentMatcher} of {@link UserAuthToken} that checks if an {@link UserAuthToken}
      * belongs to the given {@code user}, and contains the given {@code roles}.
      *
      * @param user  The {@link User} to check.
      * @param roles The {@link Set} of {@link Role}s to check.
      * @return The created {@link ArgumentMatcher}.
      */
-    private static ArgumentMatcher<AuthToken> matchingToken(final User user, final Set<Role> roles) {
-        return (final AuthToken t) -> t.getUser().equals(user) && t.getRolesAssigned().equals(roles);
+    private static ArgumentMatcher<UserAuthToken> matchingUserToken(final User user, final Set<Role> roles) {
+        return (final UserAuthToken t) -> t.getUser().equals(user) && t.getRolesAssigned().equals(roles);
+    }
+
+    /**
+     * Creates an {@link ArgumentMatcher} of {@link SubjectAuthToken} that checks if an {@link SubjectAuthToken}
+     * belongs to the given {@code subject}, and contains the given {@code roles}.
+     *
+     * @param subject The subject to check.
+     * @param roles   The {@link Set} of {@link Role}s to check.
+     * @return The created {@link ArgumentMatcher}.
+     */
+    private static ArgumentMatcher<SubjectAuthToken> matchingSubjectToken(final String subject, final Set<Role> roles) {
+        return (final SubjectAuthToken t) -> t.getSubject().equals(subject) && t.getRolesAssigned().equals(roles);
     }
 
     /**

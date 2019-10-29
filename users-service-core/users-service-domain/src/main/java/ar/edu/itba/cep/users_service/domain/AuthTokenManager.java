@@ -5,19 +5,15 @@ import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
-import ar.edu.itba.cep.users_service.models.AuthToken;
-import ar.edu.itba.cep.users_service.models.User;
-import ar.edu.itba.cep.users_service.models.UserCredential;
-import ar.edu.itba.cep.users_service.repositories.AuthTokenRepository;
-import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
-import ar.edu.itba.cep.users_service.repositories.UserRepository;
+import ar.edu.itba.cep.users_service.models.*;
+import ar.edu.itba.cep.users_service.repositories.*;
 import ar.edu.itba.cep.users_service.security.authentication.TokenEncoder;
 import ar.edu.itba.cep.users_service.services.AuthTokenService;
 import ar.edu.itba.cep.users_service.services.RawTokenContainer;
 import com.bellotapps.webapps_commons.exceptions.NoSuchEntityException;
 import com.bellotapps.webapps_commons.exceptions.UnauthenticatedException;
 import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static ar.edu.itba.cep.users_service.security.authentication.Constants.REFRESH_GRANT;
@@ -35,71 +32,49 @@ import static ar.edu.itba.cep.users_service.security.authentication.Constants.RE
  */
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor
 public class AuthTokenManager implements AuthTokenService {
 
-    /**
-     * A {@link UserRepository} used to search for {@link User}s when issuing tokens, and when listing tokens.
-     */
     private final UserRepository userRepository;
-    /**
-     * A {@link UserCredentialRepository} used to search for the actual {@link UserCredential} of a {@link User}
-     * when issuing tokens.
-     */
     private final UserCredentialRepository userCredentialRepository;
-    /**
-     * The {@link AuthTokenRepository} that allows {@link AuthToken} persistence.
-     */
-    private final AuthTokenRepository authTokenRepository;
-    /**
-     * The {@link PasswordEncoder} used to match passwords.
-     */
+    private final AuthTokenRepository<AuthToken> authTokenRepository;
+    private final UserAuthTokenRepository userAuthTokenRepository;
+    private final SubjectAuthTokenRepository subjectAuthTokenRepository;
     private final PasswordEncoder passwordEncoder;
-    /**
-     * The {@link TokenEncoder} used to encode an {@link AuthToken} into raw access and refresh tokens.
-     */
     private final TokenEncoder tokenEncoder;
-
-
-    /**
-     * Constructor.
-     *
-     * @param userRepository           A {@link UserRepository} used to search for {@link User}s when issuing tokens,
-     *                                 and when listing tokens.
-     * @param userCredentialRepository A {@link UserCredentialRepository}
-     *                                 used to search for the actual {@link UserCredential} of a {@link User}
-     *                                 when issuing tokens.
-     * @param authTokenRepository      The {@link AuthTokenRepository} that allows {@link AuthToken} persistence.
-     * @param passwordEncoder          The {@link PasswordEncoder} used to match passwords.
-     * @param tokenEncoder             The {@link TokenEncoder} used to encode an {@link AuthToken}
-     *                                 into raw access and refresh tokens.
-     */
-    @Autowired
-    public AuthTokenManager(
-            final UserRepository userRepository,
-            final UserCredentialRepository userCredentialRepository,
-            final AuthTokenRepository authTokenRepository,
-            final PasswordEncoder passwordEncoder,
-            final TokenEncoder tokenEncoder) {
-        this.userRepository = userRepository;
-        this.userCredentialRepository = userCredentialRepository;
-        this.authTokenRepository = authTokenRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.tokenEncoder = tokenEncoder;
-    }
 
 
     @Override
     @Transactional
-    public RawTokenContainer issueToken(final String username, final String password) throws UnauthenticatedException {
+    public RawTokenContainer issueTokenForUser(final String username, final String password) throws UnauthenticatedException {
         return userRepository
                 .findByUsername(username)
                 .filter(User::isActive) // Check if the user can login
                 .filter(user -> validPassword(user, password))
-                .map(AuthToken::forUser)
-                .map(authTokenRepository::save) // Save the token and use the saved instance from now on.
+                .map(UserAuthToken::forUser)
+                .map(userAuthTokenRepository::save) // Save the token and use the saved instance from now on.
                 .map(this::buildTokens)
                 .orElseThrow(UnauthenticatedException::new)
                 ;
+    }
+
+    @Override
+    @Transactional
+    public RawTokenContainer issueTokenForSubject(final String subject, final Set<Role> roles) {
+        final var token = subjectAuthTokenRepository.save(new SubjectAuthToken(subject, roles));
+        return buildTokens(token);
+    }
+
+    @Override
+    @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
+    public List<UserAuthToken> listUserTokens(final String username) throws NoSuchEntityException {
+        final var user = userRepository.findByUsername(username).orElseThrow(NoSuchEntityException::new);
+        return userAuthTokenRepository.getUserTokens(user);
+    }
+
+    @Override
+    public List<SubjectAuthToken> listSubjectTokens(final String subject) throws NoSuchEntityException {
+        return subjectAuthTokenRepository.getSubjectTokens(subject);
     }
 
     @Override
@@ -108,7 +83,8 @@ public class AuthTokenManager implements AuthTokenService {
         // TODO: check that the REFRESH role is set and permissions (user, token id, etc).
         return authTokenRepository.findById(id)
                 .filter(AuthToken::isValid)
-                .filter(t -> t.getUser().isActive()) // Should not happen, but just in case...
+                // Should not happen, but just in case...
+                .filter(t -> !(t instanceof UserAuthToken) || ((UserAuthToken) t).getUser().isActive())
                 .map(this::buildTokens)
                 .orElseThrow(UnauthorizedException::new);
     }
@@ -118,13 +94,6 @@ public class AuthTokenManager implements AuthTokenService {
     @PreAuthorize("hasAuthority('ADMIN') or @authTokenAuthorizationProvider.isOwner(#id, principal)")
     public void blacklistToken(final UUID id) {
         authTokenRepository.findById(id).ifPresent(this::blacklistToken);
-    }
-
-    @Override
-    @PreAuthorize("hasAuthority('ADMIN') or (isFullyAuthenticated() and principal == #username)")
-    public List<AuthToken> listTokens(final String username) throws NoSuchEntityException {
-        final var user = userRepository.findByUsername(username).orElseThrow(NoSuchEntityException::new);
-        return authTokenRepository.getUserTokens(user);
     }
 
 
@@ -150,7 +119,7 @@ public class AuthTokenManager implements AuthTokenService {
         final var role = userRoleRemovedEvent.getRole();
         Assert.notNull(user, "The user in the event must not be null");
         Assert.notNull(role, "The role in the event must not be null");
-        authTokenRepository.getUserTokensWithRole(user, role).forEach(this::blacklistToken);
+        userAuthTokenRepository.getUserTokensWithRole(user, role).forEach(this::blacklistToken);
     }
 
     /**
@@ -173,7 +142,7 @@ public class AuthTokenManager implements AuthTokenService {
         Assert.notNull(userEvent, "The event is null");
         final var user = userEvent.getUser();
         Assert.notNull(user, "The user in the event must not be null");
-        authTokenRepository.getUserTokens(userEvent.getUser()).forEach(this::blacklistToken);
+        userAuthTokenRepository.getUserTokens(userEvent.getUser()).forEach(this::blacklistToken);
     }
 
 

@@ -10,11 +10,11 @@ import javax.validation.constraints.NotNull;
 
 /**
  * A Data Transfer Object with the needed information
- * to issue a new {@link ar.edu.itba.cep.users_service.models.AuthToken}.
+ * to issue a new {@link ar.edu.itba.cep.users_service.models.UserAuthToken}.
  */
 @Getter
 @ToString(doNotUseGetters = true)
-public class IssueTokenRequestDto {
+public class IssueUserTokenRequestDto {
 
     /**
      * The username.
@@ -34,7 +34,7 @@ public class IssueTokenRequestDto {
      * @param password The password.
      */
     @JsonCreator
-    public IssueTokenRequestDto(
+    public IssueUserTokenRequestDto(
             @JsonProperty(value = "username", access = JsonProperty.Access.WRITE_ONLY) final String username,
             @JsonProperty(value = "password", access = JsonProperty.Access.WRITE_ONLY) final String password) {
         this.username = username;

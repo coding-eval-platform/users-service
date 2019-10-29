@@ -23,4 +23,11 @@ public class Routes {
     public static final String TOKEN_BY_ID = "/tokens/{id : .+}";
 
     public static final String TOKEN_REFRESH = "/tokens/{id : .+}/refresh";
+
+    public static final String TOKENS_USERNAME = "/tokens/username/{username : .+}";
+
+    public static final String TOKENS_SUBJECT = "/tokens/subject/{subject : .+}";
+
+
+    public static final String TOKENS_INTERNAL = "/internal/tokens";
 }

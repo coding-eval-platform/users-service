@@ -2,7 +2,8 @@ package ar.edu.itba.cep.users_service.rest.controller.endpoints;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
 import ar.edu.itba.cep.users_service.rest.controller.dtos.AuthTokenDto;
-import ar.edu.itba.cep.users_service.rest.controller.dtos.IssueTokenRequestDto;
+import ar.edu.itba.cep.users_service.rest.controller.dtos.IssueSubjectTokenRequestDto;
+import ar.edu.itba.cep.users_service.rest.controller.dtos.IssueUserTokenRequestDto;
 import ar.edu.itba.cep.users_service.rest.controller.dtos.RefreshTokenResponseDto;
 import ar.edu.itba.cep.users_service.services.AuthTokenService;
 import com.bellotapps.webapps_commons.config.JerseyController;
@@ -54,12 +55,25 @@ public class AuthTokenEndpoint {
     @POST
     @Path(Routes.TOKENS)
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response issueToken(@Context final UriInfo uriInfo, @Valid final IssueTokenRequestDto dto) {
+    public Response issueUserToken(@Context final UriInfo uriInfo, @Valid final IssueUserTokenRequestDto dto) {
         if (dto == null) {
             throw new MissingJsonException();
         }
         LOGGER.debug("Issuing token for user with username {}", dto.getUsername());
-        final var tokenWrapper = authTokenService.issueToken(dto.getUsername(), dto.getPassword());
+        final var tokenWrapper = authTokenService.issueTokenForUser(dto.getUsername(), dto.getPassword());
+        final var location = uriInfo.getAbsolutePathBuilder().path(tokenWrapper.getId().toString()).build();
+        return Response.created(location).entity(tokenWrapper).build();
+    }
+
+    @POST
+    @Path(Routes.TOKENS_INTERNAL)
+    @Consumes(MediaType.APPLICATION_JSON)
+    public Response issueSubjectToken(@Context final UriInfo uriInfo, @Valid final IssueSubjectTokenRequestDto dto) {
+        if (dto == null) {
+            throw new MissingJsonException();
+        }
+        LOGGER.debug("Issuing token for subject {} with roles {}", dto.getSubject(), dto.getRoles());
+        final var tokenWrapper = authTokenService.issueTokenForSubject(dto.getSubject(), dto.getRoles());
         final var location = uriInfo.getAbsolutePathBuilder().path(tokenWrapper.getId().toString()).build();
         return Response.created(location).entity(tokenWrapper).build();
     }
@@ -87,13 +101,27 @@ public class AuthTokenEndpoint {
     }
 
     @GET
-    @Path(Routes.TOKENS)
-    public Response listTokens(@QueryParam("username") final String username) {
+    @Path(Routes.TOKENS_USERNAME)
+    public Response listUserTokens(@PathParam("username") final String username) {
         if (username == null) {
             throw new IllegalParamValueException(List.of("username"));
         }
         LOGGER.debug("Listing tokens of user with username {}", username);
-        final var tokens = authTokenService.listTokens(username)
+        final var tokens = authTokenService.listUserTokens(username)
+                .stream()
+                .map(AuthTokenDto::new)
+                .collect(Collectors.toList());
+        return Response.ok(tokens).build();
+    }
+
+    @GET
+    @Path(Routes.TOKENS_SUBJECT)
+    public Response listSubjectTokens(@PathParam("subject") final String subject) {
+        if (subject == null) {
+            throw new IllegalParamValueException(List.of("subject"));
+        }
+        LOGGER.debug("Listing tokens of subject {}", subject);
+        final var tokens = authTokenService.listSubjectTokens(subject)
                 .stream()
                 .map(AuthTokenDto::new)
                 .collect(Collectors.toList());

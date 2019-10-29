@@ -1,16 +1,10 @@
 package ar.edu.itba.cep.users_service.spring_data;
 
 import ar.edu.itba.cep.users_service.models.AuthToken;
-import ar.edu.itba.cep.roles.Role;
-import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.repositories.AuthTokenRepository;
 import ar.edu.itba.cep.users_service.spring_data.interfaces.SpringDataAuthTokenRepository;
-import com.bellotapps.webapps_commons.persistence.spring_data.repository_utils_adapters.repositories.BasicRepositoryAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.UUID;
 
 
 /**
@@ -19,12 +13,7 @@ import java.util.UUID;
  */
 @Repository
 public class SpringDataAuthTokenRepositoryAdapter
-        implements AuthTokenRepository, BasicRepositoryAdapter<AuthToken, UUID> {
-
-    /**
-     * A {@link SpringDataAuthTokenRepository} to which all operations are delegated.
-     */
-    private final SpringDataAuthTokenRepository repository;
+        extends AbstractSpringDataAuthTokenRepositoryAdapter<AuthToken, SpringDataAuthTokenRepository> {
 
     /**
      * Constructor.
@@ -33,31 +22,6 @@ public class SpringDataAuthTokenRepositoryAdapter
      */
     @Autowired
     public SpringDataAuthTokenRepositoryAdapter(final SpringDataAuthTokenRepository repository) {
-        this.repository = repository;
-    }
-
-
-    // ================================================================================================================
-    // RepositoryAdapter
-    // ================================================================================================================
-
-    @Override
-    public SpringDataAuthTokenRepository getCrudRepository() {
-        return repository;
-    }
-
-
-    // ================================================================================================================
-    // AuthTokenRepository specific methods
-    // ================================================================================================================
-
-    @Override
-    public List<AuthToken> getUserTokens(final User user) {
-        return repository.findByUser(user);
-    }
-
-    @Override
-    public List<AuthToken> getUserTokensWithRole(final User user, final Role role) {
-        return repository.findByUserAndRole(user, role);
+        super(repository);
     }
 }

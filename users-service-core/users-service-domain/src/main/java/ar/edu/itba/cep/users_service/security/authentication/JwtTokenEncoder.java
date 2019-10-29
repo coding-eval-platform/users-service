@@ -57,7 +57,7 @@ import java.util.Set;
         final var now = Instant.now();
         final var accessToken = Jwts.builder()
                 .setId(authToken.getId().toString())
-                .setSubject(authToken.getUser().getUsername())
+                .setSubject(authToken.getOwner())
                 .claim(Constants.ROLES_CLAIM, authToken.getRolesAssigned())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plus(accessTokenDuration)))
@@ -65,7 +65,7 @@ import java.util.Set;
                 .compact();
         final var refreshToken = Jwts.builder()
                 .setId(authToken.getId().toString())
-                .setSubject(authToken.getUser().getUsername())
+                .setSubject(authToken.getOwner())
                 .claim(Constants.ROLES_CLAIM, Set.of(Constants.REFRESH_GRANT))
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(now.plus(refreshTokenDuration)))
