@@ -1,7 +1,8 @@
 package ar.edu.itba.cep.users_service.domain;
 
-import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.roles.Role;
+import ar.edu.itba.cep.users_service.domain.config.FirstUserConfigurationProperties;
+import ar.edu.itba.cep.users_service.domain.events.UserEvent;
 import ar.edu.itba.cep.users_service.models.User;
 import ar.edu.itba.cep.users_service.models.UserCredential;
 import ar.edu.itba.cep.users_service.repositories.UserCredentialRepository;
@@ -15,10 +16,10 @@ import com.bellotapps.webapps_commons.exceptions.UnauthorizedException;
 import com.bellotapps.webapps_commons.exceptions.UniqueViolationException;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.Page;
 import com.bellotapps.webapps_commons.persistence.repository_utils.paging_and_sorting.PagingRequest;
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,53 +39,18 @@ import java.util.function.Consumer;
  */
 @Service
 @Transactional(readOnly = true)
+@AllArgsConstructor
 public class UserManager implements UserService, InitializingBean {
 
-    /**
-     * The logger.
-     */
     private static final Logger LOGGER = LoggerFactory.getLogger(UserManager.class);
 
 
-    /**
-     * Repository for {@link User}s.
-     */
     private final UserRepository userRepository;
-
-    /**
-     * Repository for {@link UserCredential}s.
-     */
     private final UserCredentialRepository userCredentialRepository;
-
-    /**
-     * An {@link ApplicationEventPublisher} to publish relevant events to the rest of the application's components.
-     */
     private final ApplicationEventPublisher publisher;
-
-    /**
-     * {@link PasswordEncoder} used for hashing passwords.
-     */
     private final PasswordEncoder passwordEncoder;
+    private final FirstUserConfigurationProperties firstUserProperties;
 
-    /**
-     * Constructor.
-     *
-     * @param userRepository           Repository for {@link User}s.
-     * @param userCredentialRepository Repository for {@link UserCredential}s.
-     * @param publisher                An {@link ApplicationEventPublisher} to publish relevant events
-     *                                 to the rest of the application's components.
-     * @param passwordEncoder          {@link PasswordEncoder} used for hashing passwords.
-     */
-    @Autowired
-    public UserManager(final UserRepository userRepository,
-                       final UserCredentialRepository userCredentialRepository,
-                       final ApplicationEventPublisher publisher,
-                       final PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.userCredentialRepository = userCredentialRepository;
-        this.publisher = publisher;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     @Transactional
@@ -268,9 +234,10 @@ public class UserManager implements UserService, InitializingBean {
     private void createAdminUser() {
         if (!userRepository.existsWithRole(Role.ADMIN)) {
             LOGGER.info("No Admin user exists... Creating a new one");
-            final var username = UUID.randomUUID().toString();
-            final var randomString = UUID.randomUUID().toString();
-            final var password = randomString.toLowerCase() + randomString.toUpperCase() + "1!";
+            final var username = Optional.ofNullable(firstUserProperties.getUsername())
+                    .orElseGet(UserManager::getValidUsername);
+            final var password = Optional.ofNullable(firstUserProperties.getPassword())
+                    .orElseGet(UserManager::getValidPassword);
             final var user = new User(username);
             user.addRole(Role.ADMIN);
             final User savedUser = userRepository.save(user);
@@ -278,6 +245,22 @@ public class UserManager implements UserService, InitializingBean {
             LOGGER.info("Created admin user with username {} and password {}", username, password);
         }
     }
+
+    /**
+     * @return A {@link String} that can be used as a username.
+     */
+    private static String getValidUsername() {
+        return UUID.randomUUID().toString();
+    }
+
+    /**
+     * @return A {@link String} that can be used as a password.
+     */
+    private static String getValidPassword() {
+        final var randomString = UUID.randomUUID().toString();
+        return randomString.toLowerCase() + randomString.toUpperCase() + "1!";
+    }
+
 
     /**
      * {@link UniqueViolationError} to be used when a username is already taken.

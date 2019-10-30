@@ -1,6 +1,7 @@
 package ar.edu.itba.cep.users_service.domain;
 
 import ar.edu.itba.cep.roles.Role;
+import ar.edu.itba.cep.users_service.domain.config.FirstUserConfigurationProperties;
 import ar.edu.itba.cep.users_service.domain.events.UserDeactivatedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserDeletedEvent;
 import ar.edu.itba.cep.users_service.domain.events.UserRoleRemovedEvent;
@@ -84,7 +85,8 @@ class UserManagerTest {
                 userRepository,
                 userCredentialRepository,
                 publisher,
-                passwordEncoder
+                passwordEncoder,
+                new FirstUserConfigurationProperties()
         );
     }
 
