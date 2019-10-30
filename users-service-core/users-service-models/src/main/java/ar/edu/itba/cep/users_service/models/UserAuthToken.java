@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.util.Assert;
 
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -35,9 +36,8 @@ public class UserAuthToken extends AuthToken {
      *                      token).
      * @throws IllegalArgumentException In case any value is not a valid one.
      */
-    public UserAuthToken(final User user, final Set<Role> rolesAssigned) throws IllegalArgumentException {
+    private UserAuthToken(final User user, final Set<Role> rolesAssigned) throws IllegalArgumentException {
         super(rolesAssigned);
-        assertUser(user);
 
         this.user = user;
     }
@@ -45,6 +45,8 @@ public class UserAuthToken extends AuthToken {
 
     @Override
     public String getOwner() {
+        final var user = Optional.ofNullable(this.user)
+                .orElseThrow(() -> new IllegalStateException("The object was not initialized correctly"));
         return user.getUsername();
     }
 
@@ -74,6 +76,7 @@ public class UserAuthToken extends AuthToken {
      * @return The created {@link UserAuthToken}.
      */
     public static UserAuthToken forUser(final User user) {
+        assertUser(user);
         return new UserAuthToken(user, user.getRoles());
     }
 
@@ -90,6 +93,7 @@ public class UserAuthToken extends AuthToken {
      * @return The created {@link UserAuthToken}.
      */
     public static UserAuthToken forUserWithRoles(final User user, final Set<Role> roles) {
+        assertUser(user);
         return new UserAuthToken(user, roles);
     }
 }
