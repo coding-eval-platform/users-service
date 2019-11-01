@@ -5,12 +5,10 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.time.Instant;
 import java.util.UUID;
 
 /**
- * A Data Transfer Object that wraps token data, including its id, its expiration {@link Instant},
- * the {@link String} representation, and a refresh token.
+ * A Data Transfer Object that wraps token data, including its id, and both the access and refresh token.
  */
 @Getter
 @ToString(doNotUseGetters = true)
