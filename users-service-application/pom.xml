@@ -54,6 +54,12 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
+        <!-- Actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Database: Spring Boot JDBC Starter, PostgreSQL and Flyway -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
